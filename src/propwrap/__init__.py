@@ -35,6 +35,8 @@ from propwrap.registry import (
 )
 from propwrap.sanity import sanity_check
 from propwrap.trades import density_isp_curve, trade_at_optimum_of
+from propwrap import units
+from propwrap.units import convert
 from propwrap.workflows import (
     CharacterizeResult,
     characterize,
@@ -90,5 +92,7 @@ __all__ = [
     "TradeRow",
     "TradeResult",
     "sanity_check",
+    "units",
+    "convert",
     "__version__",
 ]

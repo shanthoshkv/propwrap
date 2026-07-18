@@ -31,7 +31,7 @@ def test_aliases_same_class() -> None:
 
 def test_evaluate_summary_str() -> None:
     m = Mixture("RP-1", "LOX", apply_cryo_defaults=False)
-    r = m.evaluate(of=2.56, pc=70, eps=20)
+    r = m.evaluate(of=2.56, pc_bar=70, eps=20)
     text = str(r)
     assert "RP1/LOX" in text
     assert "Isp_vac" in text
@@ -42,7 +42,7 @@ def test_set_defaults_evaluate_partial() -> None:
     set_defaults(pc_bar=70, eps=20)
     m = Mixture("RP-1", "LOX", apply_cryo_defaults=False)
     r = m.evaluate(of=2.56)  # pc/eps from defaults
-    assert r.pc_bar == 70
+    assert abs(r.pc_pa - 7e6) < 1
     assert r.eps == 20
 
 
@@ -57,7 +57,7 @@ def test_case_evaluate_and_compare() -> None:
 
 def test_scan_of_no_plot_by_default(tmp_path: Path) -> None:
     m = Mixture("RP-1", "LOX", apply_cryo_defaults=False)
-    sw = m.scan_of((2.2, 2.8, 0.3), pc=70, eps=20, plot=False)
+    sw = m.scan_of((2.2, 2.8, 0.3), pc_bar=70, eps=20, plot=False)
     assert len(sw.results) >= 2
     out = tmp_path / "of.png"
     sw.plot(save=str(out), show=False)
@@ -67,7 +67,7 @@ def test_scan_of_no_plot_by_default(tmp_path: Path) -> None:
 def test_bad_eps_message() -> None:
     m = Mixture("RP-1", "LOX", apply_cryo_defaults=False)
     with pytest.raises(PropwrapError, match="expansion ratio"):
-        m.evaluate(of=2.5, pc=70, eps=0.5)
+        m.evaluate(of=2.5, pc_bar=70, eps=0.5)
 
 
 def test_characterize_workflow() -> None:
@@ -115,12 +115,12 @@ def test_define_blend_workflow() -> None:
 
 def test_density_impulse_method() -> None:
     m = Mixture("RP-1", "LOX", apply_cryo_defaults=False)
-    c = m.density_impulse((2.0, 3.0, 0.5), pc=70, eps=20, plot=False)
+    c = m.density_impulse((2.0, 3.0, 0.5), pc_bar=70, eps=20, plot=False)
     assert c.optimum_isp_of > 0
     assert "Density-Isp" in c.summary()
 
 
 def test_product_gamma_profile() -> None:
     m = Mixture("RP-1", "LOX", apply_cryo_defaults=False)
-    g = m.product_gamma_profile(of=2.56, pc=70, eps_range=(5, 15, 5), use_cantera=False)
+    g = m.product_gamma_profile(of=2.56, pc_bar=70, eps_range=(5, 15, 5), use_cantera=False)
     assert len(g.gamma_cea) >= 2

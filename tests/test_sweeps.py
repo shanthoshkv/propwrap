@@ -34,7 +34,7 @@ def test_of_sweep_optimum_in_band() -> None:
 def test_pc_and_eps_sweeps() -> None:
     p = Propellant("RP-1", "LOX", cache_enabled=True)
     sw_pc = p.sweep_pc(of_ratio=2.56, pc_range=(50.0, 90.0, 20.0), eps=20.0)
-    assert sw_pc.sweep_variable == "pc_bar"
+    assert sw_pc.sweep_variable == "pc_pa"
     assert len(sw_pc.results) >= 2
 
     sw_eps = p.sweep_eps(of_ratio=2.56, pc_bar=70.0, eps_range=(10.0, 30.0, 10.0))

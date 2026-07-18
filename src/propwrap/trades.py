@@ -1,31 +1,33 @@
-"""Propellant-system trades: optimum O/F comparison and density-Isp curves."""
+"""Propellant-system trades: optimum O/F comparison and density-Isp curves (SI)."""
 
 from __future__ import annotations
 
 from typing import Sequence
 
-from propwrap.models import DensityIspCurve, DensityIspPoint, PerformanceResult, TradeResult, TradeRow
+from propwrap.models import DensityIspCurve, DensityIspPoint, TradeResult, TradeRow
 from propwrap.propellant import Propellant
-from propwrap.propellant_library import bulk_density_g_cm3, stoich_of_ratio
+from propwrap.propellant_library import bulk_density_kg_m3, stoich_of_ratio
 from propwrap.registry import get_propellant
 from propwrap.sweeps import expand_range
+from propwrap.units import bar_to_pa, density_impulse_si, pa_to_bar
 
 
 def density_isp_curve(
     fuel: str,
     oxidizer: str,
     of_range: tuple[float, float, float],
-    pc_bar: float,
-    eps: float,
+    pc_bar: float | None = None,
+    eps: float = 40.0,
     *,
+    pc_pa: float | None = None,
     cache_enabled: bool = True,
     apply_cryo_defaults: bool = True,
 ) -> DensityIspCurve:
-    """Isp_vac, bulk density, and density-Isp vs O/F for one propellant pair.
-
-    Density-Isp = Isp_vac_shifting × ρ_bulk [s · g/cm³], with
-    ρ_bulk = (r+1) / (r/ρ_ox + 1/ρ_fuel), r = O/F.
-    """
+    """Isp_vac, bulk density [kg/m³], density-Isp [s·kg/m³] vs O/F."""
+    if pc_pa is None:
+        if pc_bar is None:
+            raise ValueError("pc_pa or pc_bar required")
+        pc_pa = bar_to_pa(pc_bar)
     p = Propellant(
         fuel,
         oxidizer,
@@ -35,16 +37,14 @@ def density_isp_curve(
     values = expand_range(of_range)
     points: list[DensityIspPoint] = []
     for of in values:
-        r = p.performance(of, pc_bar, eps)
-        rho, basis = bulk_density_g_cm3(p.fuel, p.oxidizer, of)
-        dens_isp = (
-            r.isp_vac_shifting * rho if rho is not None else None
-        )
+        r = p.performance(of, pa_to_bar(pc_pa), eps)
+        rho, basis = bulk_density_kg_m3(p.fuel, p.oxidizer, of)
+        dens_isp = density_impulse_si(r.isp_vac_shifting, rho) if rho is not None else None
         points.append(
             DensityIspPoint(
                 of_ratio=of,
                 isp_vac_shifting=r.isp_vac_shifting,
-                bulk_density_g_cm3=rho,
+                bulk_density_kg_m3=rho,
                 density_isp=dens_isp,
                 tc_kelvin=r.tc_kelvin,
                 c_star=r.c_star,
@@ -59,13 +59,13 @@ def density_isp_curve(
     return DensityIspCurve(
         fuel=p.fuel,
         oxidizer=p.oxidizer,
-        pc_bar=pc_bar,
+        pc_pa=pc_pa,
         eps=eps,
         points=points,
         optimum_isp_of=best_isp.of_ratio,
         optimum_density_isp_of=best_dens.of_ratio if best_dens else None,
         stoich_of_ratio=stoich,
-        density_basis=points[0] and _basis_note(p.fuel, p.oxidizer),
+        density_basis=_basis_note(p.fuel, p.oxidizer),
     )
 
 
@@ -73,41 +73,30 @@ def _basis_note(fuel: str, oxidizer: str) -> str:
     rf = get_propellant(fuel)
     ro = get_propellant(oxidizer)
     parts = []
-    if rf and rf.density_g_cm3:
-        parts.append(f"{fuel} ρ={rf.density_g_cm3:.4f}")
-    if ro and ro.density_g_cm3:
-        parts.append(f"{oxidizer} ρ={ro.density_g_cm3:.4f}")
-    return " g/cm³; ".join(parts) + " g/cm³ (registry)" if parts else "registry densities"
+    if rf and rf.density_kg_m3:
+        parts.append(f"{fuel} ρ={rf.density_kg_m3:.1f}")
+    if ro and ro.density_kg_m3:
+        parts.append(f"{oxidizer} ρ={ro.density_kg_m3:.1f}")
+    return " kg/m³; ".join(parts) + " kg/m³ (registry)" if parts else "registry densities"
 
 
 def trade_at_optimum_of(
     pairs: Sequence[tuple[str, str] | tuple[str, str, tuple[float, float, float]]],
-    pc_bar: float,
-    eps: float,
+    pc_bar: float | None = None,
+    eps: float = 40.0,
     *,
+    pc_pa: float | None = None,
     default_of_range: tuple[float, float, float] = (1.5, 4.0, 0.1),
     of_ranges: dict[str, tuple[float, float, float]] | None = None,
     cache_enabled: bool = True,
     apply_cryo_defaults: bool = True,
 ) -> TradeResult:
-    """Compare propellant pairs each at **its own** optimum O/F (max Isp_vac).
+    if pc_pa is None:
+        if pc_bar is None:
+            raise ValueError("pc_pa or pc_bar required")
+        pc_pa = bar_to_pa(pc_bar)
+    pc_bar_v = pa_to_bar(pc_pa)
 
-    Parameters
-    ----------
-    pairs :
-        ``(fuel, oxidizer)`` or ``(fuel, oxidizer, of_range)``.
-    pc_bar, eps :
-        Shared thermo boundary conditions for a fair propellant comparison.
-    default_of_range :
-        Used when a pair does not specify its own O/F grid.
-    of_ranges :
-        Optional map ``"FUEL/OX" → (start, stop, step)``.
-
-    Notes
-    -----
-    Comparing all pairs at one fixed O/F is misleading (e.g. O/F=2.5 is poor
-    for LOX/LH2). This trade always optimizes mixture ratio per pair.
-    """
     of_ranges = of_ranges or {}
     rows: list[TradeRow] = []
 
@@ -117,9 +106,7 @@ def trade_at_optimum_of(
         else:
             fuel, ox = item[0], item[1]  # type: ignore[misc]
             key = f"{fuel}/{ox}"
-            of_range = of_ranges.get(key) or of_ranges.get(
-                f"{Propellant(fuel, ox).fuel}/{Propellant(fuel, ox).oxidizer}"
-            )
+            of_range = of_ranges.get(key)
             if of_range is None:
                 of_range = _default_range_for(fuel, ox, default_of_range)
 
@@ -129,41 +116,27 @@ def trade_at_optimum_of(
             cache_enabled=cache_enabled,
             apply_cryo_defaults=apply_cryo_defaults,
         )
-        sweep = p.sweep_of_ratio(of_range, pc_bar, eps)
+        sweep = p.sweep_of_ratio(of_range, pc_bar_v, eps)
         opt = sweep.optimum("isp_vac_shifting")
-        # density-isp at Isp optimum and at density-isp optimum
         dens_curve = density_isp_curve(
             p.fuel,
             p.oxidizer,
             of_range,
-            pc_bar,
-            eps,
+            pc_pa=pc_pa,
+            eps=eps,
             cache_enabled=cache_enabled,
             apply_cryo_defaults=apply_cryo_defaults,
         )
         best_di = None
         if dens_curve.optimum_density_isp_of is not None:
-            best_di = next(
-                pt
-                for pt in dens_curve.points
-                if abs(pt.of_ratio - dens_curve.optimum_density_isp_of) < 1e-9
-                or pt.of_ratio == dens_curve.optimum_density_isp_of
+            best_di = min(
+                dens_curve.points,
+                key=lambda pt: abs(pt.of_ratio - dens_curve.optimum_density_isp_of),  # type: ignore[arg-type]
             )
-        # match opt of on dens curve
-        di_at_isp_opt = next(
-            (
-                pt.density_isp
-                for pt in dens_curve.points
-                if abs(pt.of_ratio - opt.of_ratio) < 1e-6
-            ),
-            opt.density_impulse_vac_shifting,
+        nearest = min(
+            dens_curve.points, key=lambda pt: abs(pt.of_ratio - opt.of_ratio)
         )
-        if di_at_isp_opt is None and dens_curve.points:
-            # nearest O/F on curve
-            nearest = min(
-                dens_curve.points, key=lambda pt: abs(pt.of_ratio - opt.of_ratio)
-            )
-            di_at_isp_opt = nearest.density_isp
+        di_at_isp_opt = nearest.density_isp
 
         rows.append(
             TradeRow(
@@ -180,7 +153,6 @@ def trade_at_optimum_of(
             )
         )
 
-    # ranking
     by_isp = sorted(rows, key=lambda r: r.performance.isp_vac_shifting, reverse=True)
     by_di = sorted(
         [r for r in rows if r.density_isp_at_isp_opt is not None],
@@ -189,7 +161,7 @@ def trade_at_optimum_of(
     )
 
     return TradeResult(
-        pc_bar=pc_bar,
+        pc_pa=pc_pa,
         eps=eps,
         rows=rows,
         ranking_by_isp=[r.label for r in by_isp],
@@ -200,7 +172,6 @@ def trade_at_optimum_of(
 def _default_range_for(
     fuel: str, ox: str, default: tuple[float, float, float]
 ) -> tuple[float, float, float]:
-    """Sensible O/F grids by propellant family."""
     f = resolve_family(fuel)
     if f == "LH2":
         return (3.5, 7.0, 0.25)

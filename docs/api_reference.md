@@ -1,105 +1,148 @@
 # propwrap API reference
 
-## `Propellant`
+For a beginner walkthrough, see **[how_to_use.md](how_to_use.md)**.
+
+---
+
+## `Mixture` (preferred)
+
+Aliases: `Propellant`, `PropellantPair`.
 
 ```python
-Propellant(
+Mixture(
     fuel: str,
     oxidizer: str,
     fuel_temp_k: float | None = None,
     ox_temp_k: float | None = None,
     cache_enabled: bool = True,
+    apply_cryo_defaults: bool = True,
+    eta_cstar: float = 1.0,
+    eta_cf: float = 1.0,
+    efficiency: tuple[float, float] | None = None,  # (ηc*, ηCf)
+    inlet_temps: "auto" | "none" | dict | None = None,
 )
 ```
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `performance(of_ratio, pc_bar, eps)` | `PerformanceResult` | Frozen + shifting performance at one point |
-| `sweep_of_ratio(of_range, pc_bar, eps)` | `SweepResult` | O/F sweep; range = `(start, stop, step)` |
-| `sweep_pc(of_ratio, pc_range, eps)` | `SweepResult` | Chamber pressure [bar] sweep |
-| `sweep_eps(of_ratio, pc_bar, eps_range)` | `SweepResult` | Area-ratio sweep |
-| `gamma_vs_area_ratio(of_ratio, pc_bar, eps_range, use_cantera=True)` | `GammaProfile` | γ(T) along nozzle for MOC tools |
-| `cross_validate(of_ratio, pc_bar, eps, tolerance_pct=5.0)` | `list[CrossValidationResult]` | CEA vs Cantera |
-| `compare_to(other, of_ratio, pc_bar, eps)` | `dict` | Side-by-side comparison |
-| `clear_cache()` | `int` | Clear SQLite cache; returns rows deleted |
+| `evaluate(of=..., pc_bar=... \| pc=... \| pc_mpa=..., eps=...)` | `PerformanceResult` | One point (SI storage) |
+| `performance(of_ratio, pc_bar, eps)` | `PerformanceResult` | Legacy; **pc_bar in bar** |
+| `scan_of(of_range, pc_bar=..., eps=...)` | `SweepResult` | O/F scan |
+| `density_impulse(of_range, pc_bar=..., eps=...)` | `DensityIspCurve` | ρ·Isp vs O/F |
+| `product_gamma_profile(of=..., pc_bar=..., eps_range=...)` | `GammaProfile` | γ, T, Mw vs ε |
+| `study(of=..., pc_bar=..., eps=...)` | `MixtureStudy` | Point + optional scans |
+| `cross_validate(...)` | `list[CrossValidationResult]` | CEA vs Cantera |
+| `clear_cache()` | `int` | Clear SQLite cache |
 
-### Units
+### Pressure inputs
 
-- `of_ratio`: mass oxidizer / mass fuel
-- `pc_bar`: bar
-- `eps`: Ae/At
-- Isp fields: seconds
-- `c_star`: m/s
-- temperatures: K
+| Kwarg | Unit |
+|-------|------|
+| `pc` / `pc_pa` | Pa (SI) |
+| `pc_bar` | bar |
+| `pc_mpa` | MPa |
+| `pc_psi` | psi |
+
+Stored always as `pc_pa` [Pa]. Convenience: `result.pc_bar`.
 
 ---
 
-## Models
+## Workflows
+
+```python
+from propwrap import characterize, compare_propellants, define_blend, Case, set_defaults
+
+set_defaults(pc_bar=70, eps=40)
+characterize("RP-1", "LOX", of=2.56, pc_bar=70, eps=20, plot=False)
+compare_propellants(["RP-1/LOX", "CH4/LOX", "LH2/LOX"], pc_bar=70, eps=40)
+define_blend("MyM20", [("MMH", 20), ("UDMH", 80)], kind="fuel")
+
+case = Case(pc_bar=70, eps=40)
+case.evaluate("RP-1", "LOX", of=2.56)
+```
+
+---
+
+## Units module
+
+```python
+from propwrap import convert, units
+
+convert(70, "bar", "Pa")
+convert(300, "s", "m/s")      # Isp → ve
+units.bar_to_pa(70)
+units.isp_s_to_ve_m_s(300)
+units.g_cm3_to_kg_m3(0.81)
+```
+
+See [`src/propwrap/units.py`](../src/propwrap/units.py).
+
+---
+
+## Models (SI fields)
 
 ### `PerformanceResult`
 
-Fields: `of_ratio`, `pc_bar`, `eps`, `isp_vac_shifting`, `isp_vac_frozen`, `isp_sl_shifting`, `isp_sl_frozen`, `c_star`, `cf_vac`, `cf_sl`, `gamma_chamber`, `gamma_throat`, `gamma_exit`, `mw_chamber`, `tc_kelvin`, `tt_kelvin`, `te_kelvin`, `fuel`, `oxidizer`.
+| Field | Unit |
+|-------|------|
+| `of_ratio` | — |
+| `pc_pa` | Pa |
+| `eps` | — |
+| `isp_vac_shifting`, `isp_vac_frozen`, `isp_sl_*` | s |
+| `ve_vac_shifting`, `ve_vac_frozen` | m/s |
+| `c_star` | m/s |
+| `cf_vac`, `cf_sl` | — |
+| `gamma_*` | — |
+| `mw_chamber` | kg/kmol |
+| `tc_kelvin`, `tt_kelvin`, `te_kelvin` | K |
+| `pe_pa` | Pa |
+| `bulk_density_kg_m3` | kg/m³ |
+| `density_impulse_vac_shifting` | s·kg/m³ |
+| `chamber` / `throat` / `exit` | `StationState` |
+| `warnings` | list[str] |
 
-### `GammaProfile`
+Properties (not serialized): `pc_bar`, `pe_bar`, `bulk_density_g_cm3`.
 
-Fields: `area_ratios`, `gamma_cea`, `gamma_cantera` (optional), `temperatures_k`, `source`.
+### `StationState`
 
-### `CrossValidationResult`
+T [K], `pressure_pa` [Pa], `density_kg_m3`, Mw, γ, cp [J/(kg·K)], R, μ [Pa·s], k [W/(m·K)], Pr, species.
 
-Fields: `parameter`, `cea_value`, `cantera_value`, `absolute_diff`, `percent_diff`, `within_tolerance`.
+### `SweepResult` / `DensityIspCurve` / `TradeResult` / `GammaProfile`
 
-### `SweepResult`
-
-Fields: `sweep_variable`, `values`, `results`.
-
-Methods: `optimum(metric="isp_vac_shifting")`, `plot(...)`, `to_csv(path)`, `to_json(path)`.
-
----
-
-## Library helpers
-
-```python
-list_propellants() -> dict[str, list[str]]
-add_custom_propellant(name, formula, heat_of_formation, *, kind="fuel", temperature_k=298.15, density_g_ml=None, comment="") -> str
-```
-
-`heat_of_formation` is in **cal/mol** (CEA card convention).
-
----
-
-## Plotting
-
-```python
-from propwrap.plotting import (
-    plot_of_sweep,
-    plot_pc_sweep,
-    plot_eps_sweep,
-    plot_gamma_profile,
-    plot_propellant_comparison,
-)
-```
-
-All return `matplotlib.figure.Figure`. Optional `save_path` writes PNG/SVG. None call `plt.show()`.
+See models in source; all pressures in Pa, densities in kg/m³.
 
 ---
 
-## Export
+## Registry & blends
 
 ```python
-from propwrap.export import (
-    performance_to_json,
-    performance_to_csv,
-    sweep_to_json,
-    sweep_to_csv,
-    gamma_profile_to_json,
-    gamma_profile_to_csv,
-)
+from propwrap import get_propellant, list_registry, add_blend, add_custom_propellant
+
+get_propellant("RP-1").density_kg_m3
+list_registry(storage="cryogenic")
+add_blend("MyM20", [("MMH", 20), ("UDMH", 80)], kind="fuel")
 ```
 
 ---
 
 ## CLI
 
-Entry point: `propwrap` → `propwrap.cli:main`.
+```bash
+propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+propwrap scan-of RP-1 LOX --pc-bar 70 --eps 20 --range 2.0 3.2 0.1
+propwrap compare-pairs --combos "RP-1/LOX,LH2/LOX" --pc-bar 70 --eps 40
+propwrap list --cryogenic
+propwrap clear-cache
+```
 
-Commands: `performance`, `sweep`, `compare`, `list-propellants`, `clear-cache`.
+`--pc` = Pa, `--pc-bar` = bar, `--pc-mpa` = MPa. Plots: `--plot` / `--save`.
+
+---
+
+## Plotting
+
+All plot functions return a matplotlib `Figure`. They do **not** call `plt.show()` unless `show=True`.
+
+```python
+sweep.plot(save="out.png", show=False)
+```

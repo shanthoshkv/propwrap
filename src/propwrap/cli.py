@@ -27,7 +27,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         p.add_argument("--fuel", dest="fuel_opt", default=None)
         p.add_argument("--ox", dest="ox_opt", default=None)
         p.add_argument("--of", type=float, required=True)
-        p.add_argument("--pc", type=float, default=None)
+        p.add_argument("--pc", type=float, default=None, help="Pc [Pa] (SI)")
+        p.add_argument("--pc-bar", type=float, default=None, dest="pc_bar", help="Pc [bar]")
+        p.add_argument("--pc-mpa", type=float, default=None, dest="pc_mpa", help="Pc [MPa]")
         p.add_argument("--eps", type=float, default=None)
         p.add_argument("--json", action="store_true")
         p.add_argument("--verbose", "-v", action="store_true")
@@ -158,7 +160,14 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
     fuel, ox = _fuel_ox(args)
     m = Mixture(fuel, ox)
-    r = m.evaluate(of=args.of, pc=args.pc, eps=args.eps, verbose=args.verbose)
+    r = m.evaluate(
+        of=args.of,
+        pc=args.pc,
+        pc_bar=getattr(args, "pc_bar", None),
+        pc_mpa=getattr(args, "pc_mpa", None),
+        eps=args.eps,
+        verbose=args.verbose,
+    )
     if args.json:
         print(r.model_dump_json(indent=2))
     elif not args.verbose:

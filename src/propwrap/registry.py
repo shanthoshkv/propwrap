@@ -20,7 +20,7 @@ class PropellantRecord(BaseModel):
     aliases: list[str] = Field(default_factory=list)
     formula: str | None = None
     molecular_weight: float | None = None  # g/mol
-    density_g_cm3: float | None = None  # liquid handbook density
+    density_kg_m3: float | None = None  # liquid handbook density
     default_temp_k: float | None = None  # suggested inlet T
     heat_of_formation_cal_mol: float | None = None
     storage: StorageClass = "unknown"
@@ -53,7 +53,7 @@ def _seed() -> None:
             kind="fuel",
             aliases=["RP-1", "RP_1", "KEROSENE"],
             formula="~C12H24",
-            density_g_cm3=0.81,
+            density_kg_m3=810.0,
             default_temp_k=298.15,
             storage="storable",
             notes="Refined kerosene rocket propellant",
@@ -65,7 +65,7 @@ def _seed() -> None:
             aliases=["H2", "HYDROGEN"],
             formula="H2",
             molecular_weight=2.016,
-            density_g_cm3=0.0708,
+            density_kg_m3=70.8,
             default_temp_k=20.4,
             storage="cryogenic",
             source="RocketCEA built-in / NBP density",
@@ -76,7 +76,7 @@ def _seed() -> None:
             aliases=["LCH4", "METHANE"],
             formula="CH4",
             molecular_weight=16.04,
-            density_g_cm3=0.422,
+            density_kg_m3=422.0,
             default_temp_k=111.6,
             storage="cryogenic",
             source="RocketCEA built-in / NBP density",
@@ -87,7 +87,7 @@ def _seed() -> None:
             aliases=[],
             formula="CH6N2",
             molecular_weight=46.07,
-            density_g_cm3=0.874,
+            density_kg_m3=874.0,
             default_temp_k=298.15,
             storage="storable",
             hypergolic_with=["N2O4", "IRFNA"],
@@ -99,7 +99,7 @@ def _seed() -> None:
             aliases=[],
             formula="C2H8N2",
             molecular_weight=60.10,
-            density_g_cm3=0.793,
+            density_kg_m3=793.0,
             default_temp_k=298.15,
             storage="storable",
             hypergolic_with=["N2O4", "IRFNA"],
@@ -110,7 +110,7 @@ def _seed() -> None:
             kind="fuel",
             aliases=["AEROZINE-50", "AEROZINE50"],
             formula="50% UDMH / 50% N2H4",
-            density_g_cm3=0.90,
+            density_kg_m3=900.0,
             default_temp_k=298.15,
             storage="storable",
             is_blend=True,
@@ -125,7 +125,7 @@ def _seed() -> None:
             aliases=["C2H5OH", "ETHANOL"],
             formula="C2H5OH",
             molecular_weight=46.07,
-            density_g_cm3=0.789,
+            density_kg_m3=789.0,
             default_temp_k=298.15,
             storage="storable",
             source="RocketCEA built-in",
@@ -134,7 +134,7 @@ def _seed() -> None:
             name="JP4",
             kind="fuel",
             aliases=["JP-4"],
-            density_g_cm3=0.76,
+            density_kg_m3=760.0,
             default_temp_k=298.15,
             storage="storable",
             source="RocketCEA built-in",
@@ -143,7 +143,7 @@ def _seed() -> None:
             name="JP5",
             kind="fuel",
             aliases=["JP-5"],
-            density_g_cm3=0.81,
+            density_kg_m3=810.0,
             default_temp_k=298.15,
             storage="storable",
             source="RocketCEA built-in",
@@ -152,7 +152,7 @@ def _seed() -> None:
             name="JP10",
             kind="fuel",
             aliases=["JP-10"],
-            density_g_cm3=0.94,
+            density_kg_m3=940.0,
             default_temp_k=298.15,
             storage="storable",
             source="RocketCEA built-in",
@@ -165,7 +165,7 @@ def _seed() -> None:
             aliases=["O2", "LO2", "OXYGEN"],
             formula="O2",
             molecular_weight=32.0,
-            density_g_cm3=1.141,
+            density_kg_m3=1141.0,
             default_temp_k=90.2,
             storage="cryogenic",
             source="RocketCEA built-in / NBP density",
@@ -176,7 +176,7 @@ def _seed() -> None:
             aliases=["NTO"],
             formula="N2O4",
             molecular_weight=92.01,
-            density_g_cm3=1.443,
+            density_kg_m3=1443.0,
             default_temp_k=298.15,
             storage="storable",
             source="RocketCEA built-in",
@@ -187,7 +187,7 @@ def _seed() -> None:
             aliases=["NITROUS"],
             formula="N2O",
             molecular_weight=44.01,
-            density_g_cm3=0.785,
+            density_kg_m3=785.0,
             default_temp_k=185.0,
             storage="semi_cryogenic",
             source="RocketCEA built-in",
@@ -198,7 +198,7 @@ def _seed() -> None:
             aliases=["HTP"],
             formula="H2O2",
             molecular_weight=34.01,
-            density_g_cm3=1.39,
+            density_kg_m3=1390.0,
             default_temp_k=298.15,
             storage="storable",
             notes="High-test peroxide class; concentration varies in practice",
@@ -208,7 +208,7 @@ def _seed() -> None:
             name="IRFNA",
             kind="oxidizer",
             aliases=[],
-            density_g_cm3=1.57,
+            density_kg_m3=1570.0,
             default_temp_k=298.15,
             storage="storable",
             source="RocketCEA built-in",
@@ -311,6 +311,18 @@ def list_registry(
     return out
 
 
-def density_g_cm3(name: str) -> float | None:
+def get_density_kg_m3(name: str) -> float | None:
+    """Lookup liquid density [kg/m³]."""
     rec = get_propellant(name)
-    return rec.density_g_cm3 if rec else None
+    return rec.density_kg_m3 if rec else None
+
+
+# Alias used by propellant_library
+density_kg_m3 = get_density_kg_m3  # type: ignore[misc]
+
+
+def density_g_cm3(name: str) -> float | None:
+    from propwrap.units import kg_m3_to_g_cm3
+
+    d = get_density_kg_m3(name)
+    return kg_m3_to_g_cm3(d) if d is not None else None

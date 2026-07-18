@@ -15,12 +15,14 @@ from propwrap.propellant import Propellant
 def _fake_result(**overrides: object) -> PerformanceResult:
     base: dict = dict(
         of_ratio=2.56,
-        pc_bar=70.0,
+        pc_pa=7.0e6,
         eps=20.0,
         isp_vac_shifting=340.0,
         isp_vac_frozen=320.0,
         isp_sl_shifting=300.0,
         isp_sl_frozen=280.0,
+        ve_vac_shifting=3334.0,
+        ve_vac_frozen=3138.0,
         c_star=1800.0,
         cf_vac=1.85,
         cf_sl=1.55,

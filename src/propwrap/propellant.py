@@ -122,23 +122,41 @@ class Mixture:
         *,
         of_ratio: float | None = None,
         mixture_ratio: float | None = None,
+        pc_pa: float | None = None,
         pc_bar: float | None = None,
+        pc_mpa: float | None = None,
+        pc_psi: float | None = None,
         expansion_ratio: float | None = None,
     ) -> tuple[float, float, float]:
+        """Return (of, pc_pa, eps). Pressure is always pascals."""
+        from propwrap.units import resolve_pressure_pa
+
         of_v = next((v for v in (of, of_ratio, mixture_ratio) if v is not None), None)
         if of_v is None:
             raise PropwrapError(
                 "Mixture ratio required. Pass of=..., of_ratio=..., or mixture_ratio=..."
             )
-        pc_v, eps_v = resolve_pc_eps(
-            pc_bar if pc_bar is not None else pc,
-            eps,
-            expansion_ratio=expansion_ratio,
-            pc=pc if pc_bar is None else None,
+        d = get_defaults()
+        try:
+            pc_v = resolve_pressure_pa(
+                pc=pc,
+                pc_pa=pc_pa,
+                pc_bar=pc_bar,
+                pc_mpa=pc_mpa,
+                pc_psi=pc_psi,
+                default_pa=float(d["pc_pa"]),
+            )
+        except ValueError:
+            pc_v = float(d["pc_pa"])
+        eps_v = (
+            float(eps)
+            if eps is not None
+            else (
+                float(expansion_ratio)
+                if expansion_ratio is not None
+                else float(d["eps"])
+            )
         )
-        # if user passed nothing, resolve_pc_eps uses defaults — good
-        if pc is None and pc_bar is None:
-            pc_v = resolve_pc_eps(None, eps_v)[0]
         validate_of(float(of_v))
         validate_pc(float(pc_v))
         validate_eps(float(eps_v))
@@ -152,20 +170,30 @@ class Mixture:
         *,
         of_ratio: float | None = None,
         mixture_ratio: float | None = None,
+        pc_pa: float | None = None,
         pc_bar: float | None = None,
+        pc_mpa: float | None = None,
+        pc_psi: float | None = None,
         expansion_ratio: float | None = None,
         verbose: bool = False,
         full: bool = True,
         frozen: bool = False,
     ) -> PerformanceResult:
-        """Evaluate mixture at one (O/F, Pc, ε). Alias of ``performance``."""
+        """Evaluate mixture at one (O/F, Pc [Pa], ε).
+
+        Pressure is SI pascals via ``pc`` / ``pc_pa``. Convenience:
+        ``pc_bar=``, ``pc_mpa=``, ``pc_psi=``.
+        """
         of_v, pc_v, eps_v = self._resolve_point_args(
             of,
             pc,
             eps,
             of_ratio=of_ratio,
             mixture_ratio=mixture_ratio,
+            pc_pa=pc_pa,
             pc_bar=pc_bar,
+            pc_mpa=pc_mpa,
+            pc_psi=pc_psi,
             expansion_ratio=expansion_ratio,
         )
         result = self._compute(of_v, pc_v, eps_v, include_stations=full)
@@ -182,13 +210,13 @@ class Mixture:
     def performance(
         self, of_ratio: float, pc_bar: float, eps: float
     ) -> PerformanceResult:
-        """Classic API: evaluate(of_ratio, pc_bar, eps)."""
-        return self.evaluate(of=of_ratio, pc=pc_bar, eps=eps)
+        """Legacy API: ``pc_bar`` is chamber pressure in **bar** (converted to Pa)."""
+        return self.evaluate(of=of_ratio, pc_bar=pc_bar, eps=eps)
 
     def _compute(
         self,
         of_ratio: float,
-        pc_bar: float,
+        pc_pa: float,
         eps: float,
         *,
         include_stations: bool = True,
@@ -200,11 +228,11 @@ class Mixture:
                 self.fuel,
                 self.oxidizer,
                 of_ratio,
-                pc_bar,
+                pc_pa,
                 eps,
                 self.fuel_temp_k,
                 self.ox_temp_k,
-                method="cea_performance_v2",
+                method="cea_performance_v3_si",
                 eta_cstar=self.eta_cstar,
                 eta_cf=self.eta_cf,
                 cryo=self.apply_cryo_defaults,
@@ -219,7 +247,7 @@ class Mixture:
             fuel=self.fuel,
             oxidizer=self.oxidizer,
             of_ratio=of_ratio,
-            pc_bar=pc_bar,
+            pc_pa=pc_pa,
             eps=eps,
             fuel_temp_k=self.fuel_temp_k,
             ox_temp_k=self.ox_temp_k,
@@ -238,7 +266,9 @@ class Mixture:
         pc: float | None = None,
         eps: float | None = None,
         *,
+        pc_pa: float | None = None,
         pc_bar: float | None = None,
+        pc_mpa: float | None = None,
         expansion_ratio: float | None = None,
         plot: bool = False,
         save: str | None = None,
@@ -246,7 +276,14 @@ class Mixture:
         verbose: bool = False,
     ) -> SweepResult:
         """Scan mixture ratio (O/F). Alias: ``scan_mixture_ratio``, ``sweep_of_ratio``."""
-        pc_v, eps_v = resolve_pc_eps(pc_bar if pc_bar is not None else pc, eps, expansion_ratio=expansion_ratio)
+        pc_v, eps_v = resolve_pc_eps(
+            pc,
+            eps,
+            expansion_ratio=expansion_ratio,
+            pc_pa=pc_pa,
+            pc_bar=pc_bar,
+            pc_mpa=pc_mpa,
+        )
         validate_pc(pc_v)
         validate_eps(eps_v)
         if of_range is None:
@@ -276,7 +313,8 @@ class Mixture:
         pc_bar: float,
         eps: float,
     ) -> SweepResult:
-        return self.scan_of(of_range, pc=pc_bar, eps=eps)
+        """Legacy: ``pc_bar`` in bar."""
+        return self.scan_of(of_range, pc_bar=pc_bar, eps=eps)
 
     def sweep_pc(
         self,
@@ -287,10 +325,15 @@ class Mixture:
         plot: bool = False,
         save: str | None = None,
         show: bool = False,
+        unit: str = "bar",
     ) -> SweepResult:
-        values = expand_range(pc_range)
-        results = [self._compute(of_ratio, v, eps) for v in values]
-        sweep = SweepResult(sweep_variable="pc_bar", values=values, results=results)
+        """Sweep chamber pressure. ``pc_range`` in ``unit`` (default bar for legacy)."""
+        from propwrap.units import pressure_to_pa
+
+        values_in = expand_range(pc_range)
+        values_pa = [pressure_to_pa(v, unit) for v in values_in]
+        results = [self._compute(of_ratio, v, eps) for v in values_pa]
+        sweep = SweepResult(sweep_variable="pc_pa", values=values_pa, results=results)
         if plot or save:
             sweep.plot(save=save, show=show)
         return sweep
@@ -305,8 +348,12 @@ class Mixture:
         save: str | None = None,
         show: bool = False,
     ) -> SweepResult:
+        """Legacy: ``pc_bar`` in bar."""
+        from propwrap.units import bar_to_pa
+
+        pc_pa = bar_to_pa(pc_bar)
         values = expand_range(eps_range)
-        results = [self._compute(of_ratio, pc_bar, v) for v in values]
+        results = [self._compute(of_ratio, pc_pa, v) for v in values]
         sweep = SweepResult(sweep_variable="eps", values=values, results=results)
         if plot or save:
             sweep.plot(save=save, show=show)
@@ -318,6 +365,7 @@ class Mixture:
         pc: float | None = None,
         eps: float | None = None,
         *,
+        pc_pa: float | None = None,
         pc_bar: float | None = None,
         expansion_ratio: float | None = None,
         plot: bool = False,
@@ -325,11 +373,11 @@ class Mixture:
         show: bool = False,
         verbose: bool = False,
     ) -> DensityIspCurve:
-        """Density-Isp vs O/F for this pair."""
+        """Density-Isp vs O/F for this pair (ρ in kg/m³)."""
         from propwrap.trades import density_isp_curve
 
         pc_v, eps_v = resolve_pc_eps(
-            pc_bar if pc_bar is not None else pc, eps, expansion_ratio=expansion_ratio
+            pc, eps, expansion_ratio=expansion_ratio, pc_pa=pc_pa, pc_bar=pc_bar
         )
         if of_range is None:
             from propwrap.trades import _default_range_for
@@ -357,6 +405,7 @@ class Mixture:
         eps_range: tuple[float, float, float] | None = None,
         *,
         of_ratio: float | None = None,
+        pc_bar: float | None = None,
         use_cantera: bool = False,
         frozen: bool = True,
         plot: bool = False,
@@ -367,7 +416,7 @@ class Mixture:
         of_v = of if of is not None else of_ratio
         if of_v is None:
             raise PropwrapError("of= mixture ratio required for product_gamma_profile")
-        pc_v, _ = resolve_pc_eps(pc, None)
+        pc_v, _ = resolve_pc_eps(pc, None, pc_bar=pc_bar)
         if eps_range is None:
             eps_range = (2.0, 40.0, 2.0)
         profile = self.gamma_vs_area_ratio(
@@ -386,6 +435,22 @@ class Mixture:
         *,
         frozen: bool = True,
     ) -> GammaProfile:
+        """Legacy: ``pc_bar`` is in **bar**."""
+        from propwrap.units import bar_to_pa
+
+        return self._gamma_profile_pa(
+            of_ratio, bar_to_pa(pc_bar), eps_range, use_cantera=use_cantera, frozen=frozen
+        )
+
+    def _gamma_profile_pa(
+        self,
+        of_ratio: float,
+        pc_pa: float,
+        eps_range: tuple[float, float, float],
+        use_cantera: bool = True,
+        *,
+        frozen: bool = True,
+    ) -> GammaProfile:
         from propwrap import cantera_backend
 
         values = expand_range(eps_range)
@@ -395,7 +460,7 @@ class Mixture:
             self.fuel,
             self.oxidizer,
             of_ratio,
-            pc_bar,
+            pc_pa,
             values,
             frozen=frozen,
             fuel_temp_k=self.fuel_temp_k,
@@ -406,7 +471,7 @@ class Mixture:
                 self.fuel,
                 self.oxidizer,
                 of_ratio,
-                pc_bar,
+                pc_pa,
                 eps=values[-1],
                 fuel_temp_k=self.fuel_temp_k,
                 ox_temp_k=self.ox_temp_k,
@@ -417,7 +482,7 @@ class Mixture:
                     g_ct.append(
                         cantera_backend.gamma_frozen(
                             T_k=te,
-                            P_bar=pc_bar,
+                            P_pa=pc_pa,
                             species_mole_fractions=chamber["species_mole_fractions"],
                             fallback_gamma=gcea,
                         )
@@ -433,20 +498,28 @@ class Mixture:
         pc: float | None = None,
         eps: float | None = None,
         *,
+        pc_bar: float | None = None,
         of_range: tuple[float, float, float] | None = None,
         eps_range: tuple[float, float, float] | None = (5.0, 30.0, 5.0),
         verbose: bool = False,
     ) -> MixtureStudy:
         """Mixture study at a point + optional O/F scan (alias of engine_case)."""
-        pc_v, eps_v = resolve_pc_eps(pc, eps)
-        design = self.evaluate(of=of, pc=pc_v, eps=eps_v)
+        pc_v, eps_v = resolve_pc_eps(pc, eps, pc_bar=pc_bar)
+        design = self.evaluate(of=of, pc_pa=pc_v, eps=eps_v)
         notes = list(design.warnings)
-        of_sw = self.scan_of(of_range, pc=pc_v, eps=eps_v) if of_range else None
+        from propwrap.units import pa_to_bar
+
+        of_sw = self.scan_of(of_range, pc_pa=pc_v, eps=eps_v) if of_range else None
         eps_sw = (
-            self.sweep_eps(of, pc_v, eps_range) if eps_range is not None else None
+            self.sweep_eps(of, pa_to_bar(pc_v), eps_range)
+            if eps_range is not None
+            else None
         )
-        gprof = self.product_gamma_profile(
-            of=of, pc=pc_v, eps_range=eps_range or (2.0, eps_v, max(1.0, (eps_v - 2) / 5))
+        gprof = self._gamma_profile_pa(
+            of,
+            pc_v,
+            eps_range or (2.0, eps_v, max(1.0, (eps_v - 2) / 5)),
+            use_cantera=False,
         )
         if of_sw is not None:
             od = of_sw.off_design(of)
@@ -477,13 +550,16 @@ class Mixture:
         *,
         frozen: bool = False,
     ) -> dict[str, float | str]:
+        """Legacy ambient API: pressures in **bar**."""
+        from propwrap.units import bar_to_pa
+
         return cea_backend.ambient_isp(
             self.fuel,
             self.oxidizer,
             of_ratio,
-            pc_bar,
+            bar_to_pa(pc_bar),
             eps,
-            pamb_bar,
+            bar_to_pa(pamb_bar),
             self.fuel_temp_k,
             self.ox_temp_k,
             frozen=frozen,
@@ -496,13 +572,15 @@ class Mixture:
         eps: float,
         tolerance_pct: float = 5.0,
     ) -> list[CrossValidationResult]:
+        """Legacy: ``pc_bar`` in bar."""
         from propwrap.cross_validation import run_cross_validation
+        from propwrap.units import bar_to_pa
 
         return run_cross_validation(
             fuel=self.fuel,
             oxidizer=self.oxidizer,
             of_ratio=of_ratio,
-            pc_bar=pc_bar,
+            pc_pa=bar_to_pa(pc_bar),
             eps=eps,
             tolerance_pct=tolerance_pct,
             fuel_temp_k=self.fuel_temp_k,
@@ -516,8 +594,9 @@ class Mixture:
         pc_bar: float,
         eps: float,
     ) -> dict[str, Any]:
-        a = self.evaluate(of=of_ratio, pc=pc_bar, eps=eps)
-        b = other.evaluate(of=of_ratio, pc=pc_bar, eps=eps)
+        """Legacy: ``pc_bar`` in bar."""
+        a = self.evaluate(of=of_ratio, pc_bar=pc_bar, eps=eps)
+        b = other.evaluate(of=of_ratio, pc_bar=pc_bar, eps=eps)
         a_d, b_d = a.model_dump(), b.model_dump()
         delta: dict[str, Any] = {}
         for k, va in a_d.items():

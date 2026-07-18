@@ -1,4 +1,4 @@
-"""Pydantic result models for the public propwrap API."""
+"""Pydantic result models — all quantities in SI (see propwrap.units)."""
 
 from __future__ import annotations
 
@@ -11,17 +11,17 @@ if TYPE_CHECKING:
 
 
 class StationState(BaseModel):
-    """Thermo/transport at chamber, throat, or exit.
+    """Thermo/transport at chamber, throat, or exit (SI).
 
-    Units: T [K], P [bar], rho [kg/m³], Mw [kg/kmol], gamma [-],
-    cp [J/(kg·K)], R_specific [J/(kg·K)], mu [Pa·s], k [W/(m·K)], Pr [-].
+    T [K], P [Pa], rho [kg/m³], Mw [kg/kmol], gamma [-],
+    cp [J/(kg·K)], R [J/(kg·K)], mu [Pa·s], k [W/(m·K)], Pr [-].
     """
 
     model_config = ConfigDict(extra="forbid")
 
     name: Literal["chamber", "throat", "exit"]
     temperature_k: float
-    pressure_bar: float
+    pressure_pa: float
     density_kg_m3: float
     mw: float
     gamma: float
@@ -32,20 +32,32 @@ class StationState(BaseModel):
     prandtl: float
     species_mole_fractions: dict[str, float] = Field(default_factory=dict)
 
+    @property
+    def pressure_bar(self) -> float:
+        """Convenience: pressure [bar] = Pa / 1e5 (not serialized)."""
+        from propwrap.units import pa_to_bar
+
+        return pa_to_bar(self.pressure_pa)
+
 
 class PerformanceResult(BaseModel):
-    """Frozen + shifting performance at one operating point (SI-adjacent units)."""
+    """Performance at one operating point — SI public units.
+
+    Isp remains in seconds (rocketry standard); ve_* gives m/s (Isp · g0).
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     of_ratio: float
-    pc_bar: float
+    pc_pa: float
     eps: float
-    isp_vac_shifting: float
+    isp_vac_shifting: float  # s
     isp_vac_frozen: float
     isp_sl_shifting: float
     isp_sl_frozen: float
-    c_star: float
+    ve_vac_shifting: float = 0.0  # m/s
+    ve_vac_frozen: float = 0.0
+    c_star: float  # m/s
     cf_vac: float
     cf_sl: float
     gamma_chamber: float
@@ -57,21 +69,20 @@ class PerformanceResult(BaseModel):
     te_kelvin: float
     fuel: str
     oxidizer: str
-    # Engineering extensions
-    pe_bar: float = 0.0
+    pe_pa: float = 0.0
     pc_over_pe: float = 0.0
     ambient_mode: str = ""
     fuel_temp_k: float | None = None
     ox_temp_k: float | None = None
     temps_are_default: bool = True
     equilibrium_modes: str = "shifting+frozen"
-    pamb_sl_bar: float = 1.01325
+    pamb_sl_pa: float = 101325.0
     chamber: StationState | None = None
     throat: StationState | None = None
     exit: StationState | None = None
     stoich_of_ratio: float | None = None
-    density_impulse_vac_shifting: float | None = None  # s · g/cm³ bulk
-    bulk_density_g_cm3: float | None = None
+    density_impulse_vac_shifting: float | None = None  # s · kg/m³
+    bulk_density_kg_m3: float | None = None
     density_basis: str | None = None
     isp_vac_delivered: float | None = None
     isp_sl_delivered: float | None = None
@@ -80,6 +91,27 @@ class PerformanceResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     propwrap_version: str = ""
     from_cache: bool = False
+
+    # --- convenience views (not serialized) ---
+    @property
+    def pc_bar(self) -> float:
+        from propwrap.units import pa_to_bar
+
+        return pa_to_bar(self.pc_pa)
+
+    @property
+    def pe_bar(self) -> float:
+        from propwrap.units import pa_to_bar
+
+        return pa_to_bar(self.pe_pa)
+
+    @property
+    def bulk_density_g_cm3(self) -> float | None:
+        from propwrap.units import kg_m3_to_g_cm3
+
+        if self.bulk_density_kg_m3 is None:
+            return None
+        return kg_m3_to_g_cm3(self.bulk_density_kg_m3)
 
     def summary(self, *, frozen: bool = False) -> str:
         from propwrap.display import performance_summary
@@ -91,7 +123,7 @@ class PerformanceResult(BaseModel):
 
 
 class GammaProfile(BaseModel):
-    """γ, T, Mw along nozzle area ratio (for MOC / contour tools)."""
+    """γ, T, Mw along expansion (product properties). Pressures in Pa."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -100,9 +132,15 @@ class GammaProfile(BaseModel):
     gamma_cantera: list[float] | None = None
     temperatures_k: list[float]
     mw: list[float] = Field(default_factory=list)
-    pressure_bar: list[float] = Field(default_factory=list)
+    pressure_pa: list[float] = Field(default_factory=list)
     source: Literal["cea_frozen", "cea_shifting", "cantera_frozen"]
-    constant_gamma_equiv: float | None = None  # throat-weighted simple average
+    constant_gamma_equiv: float | None = None
+
+    @property
+    def pressure_bar(self) -> list[float]:
+        from propwrap.units import pa_to_bar
+
+        return [pa_to_bar(p) for p in self.pressure_pa]
 
     def summary(self) -> str:
         from propwrap.display import gamma_summary
@@ -137,7 +175,7 @@ class CrossValidationResult(BaseModel):
 class SweepResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    sweep_variable: Literal["of_ratio", "pc_bar", "eps"]
+    sweep_variable: Literal["of_ratio", "pc_pa", "eps"]
     values: list[float]
     results: list[PerformanceResult]
     stoich_of_ratio: float | None = None
@@ -160,7 +198,6 @@ class SweepResult(BaseModel):
     def off_design(
         self, of_ratio: float, metric: str = "isp_vac_shifting"
     ) -> dict[str, float]:
-        """Isp loss vs optimum when running at ``of_ratio`` (nearest sample)."""
         if self.sweep_variable != "of_ratio":
             raise ValueError("off_design requires of_ratio sweep")
         opt = self.optimum(metric)
@@ -186,14 +223,13 @@ class SweepResult(BaseModel):
         show: bool = False,
         **kwargs: Any,
     ) -> Figure:
-        """Opt-in plot. Does not show unless ``show=True``."""
         from propwrap import plotting
         from propwrap.display import maybe_close, maybe_show
 
         path = save or kwargs.pop("save_path", None)
         if self.sweep_variable == "of_ratio":
             fig = plotting.plot_of_sweep(self, save_path=path, **kwargs)
-        elif self.sweep_variable == "pc_bar":
+        elif self.sweep_variable == "pc_pa":
             fig = plotting.plot_pc_sweep(self, save_path=path, **kwargs)
         elif self.sweep_variable == "eps":
             fig = plotting.plot_eps_sweep(self, save_path=path, **kwargs)
@@ -216,11 +252,6 @@ class SweepResult(BaseModel):
 
 
 class MixtureStudy(BaseModel):
-    """Bundled mixture study: design point + optional scans + γ profile.
-
-    Formerly ``EngineCase`` (alias retained).
-    """
-
     model_config = ConfigDict(extra="forbid")
 
     design: PerformanceResult
@@ -242,37 +273,38 @@ class MixtureStudy(BaseModel):
         return self.summary()
 
 
-# Back-compat alias
 EngineCase = MixtureStudy
 
 
 class DensityIspPoint(BaseModel):
-    """One O/F sample on a density-Isp curve."""
-
     model_config = ConfigDict(extra="forbid")
 
     of_ratio: float
     isp_vac_shifting: float
-    bulk_density_g_cm3: float | None
-    density_isp: float | None  # s · g/cm³
+    bulk_density_kg_m3: float | None
+    density_isp: float | None  # s · kg/m³
     tc_kelvin: float
     c_star: float
 
 
 class DensityIspCurve(BaseModel):
-    """Density-impulse characterization of a propellant pair vs O/F."""
-
     model_config = ConfigDict(extra="forbid")
 
     fuel: str
     oxidizer: str
-    pc_bar: float
+    pc_pa: float
     eps: float
     points: list[DensityIspPoint]
     optimum_isp_of: float
     optimum_density_isp_of: float | None
     stoich_of_ratio: float | None = None
     density_basis: str | None = None
+
+    @property
+    def pc_bar(self) -> float:
+        from propwrap.units import pa_to_bar
+
+        return pa_to_bar(self.pc_pa)
 
     def summary(self) -> str:
         from propwrap.display import density_isp_summary
@@ -301,7 +333,7 @@ class DensityIspCurve(BaseModel):
         fields = [
             "of_ratio",
             "isp_vac_shifting",
-            "bulk_density_g_cm3",
+            "bulk_density_kg_m3",
             "density_isp",
             "tc_kelvin",
             "c_star",
@@ -314,8 +346,6 @@ class DensityIspCurve(BaseModel):
 
 
 class TradeRow(BaseModel):
-    """One propellant pair evaluated at its own optimum O/F."""
-
     model_config = ConfigDict(extra="forbid")
 
     fuel: str
@@ -331,24 +361,31 @@ class TradeRow(BaseModel):
 
 
 class TradeResult(BaseModel):
-    """Multi-pair propellant trade at shared Pc/ε, each at optimum O/F."""
-
     model_config = ConfigDict(extra="forbid")
 
-    pc_bar: float
+    pc_pa: float
     eps: float
     rows: list[TradeRow]
     ranking_by_isp: list[str]
     ranking_by_density_isp: list[str]
 
+    @property
+    def pc_bar(self) -> float:
+        from propwrap.units import pa_to_bar
+
+        return pa_to_bar(self.pc_pa)
+
     def summary_table(self) -> str:
+        from propwrap.units import pa_to_bar
+
         lines = [
-            f"{'pair':<16} {'O/F*':>6} {'Isp_vac':>8} {'ρ·Isp':>8} {'Tc':>8} {'c*':>8}",
-            "-" * 60,
+            f"Pc = {self.pc_pa:.3e} Pa ({pa_to_bar(self.pc_pa):.4g} bar)  ε = {self.eps:g}",
+            f"{'pair':<16} {'O/F*':>6} {'Isp_vac':>8} {'ρ·Isp':>12} {'Tc':>8} {'c*':>8}",
+            "-" * 68,
         ]
         for r in self.rows:
             di = r.density_isp_at_isp_opt
-            di_s = f"{di:8.1f}" if di is not None else f"{'n/a':>8}"
+            di_s = f"{di:12.1f}" if di is not None else f"{'n/a':>12}"
             lines.append(
                 f"{r.label:<16} {r.optimum_of:6.2f} "
                 f"{r.performance.isp_vac_shifting:8.1f} {di_s} "
@@ -357,6 +394,7 @@ class TradeResult(BaseModel):
         lines.append("")
         lines.append("Rank by Isp: " + " > ".join(self.ranking_by_isp))
         lines.append("Rank by ρ·Isp: " + " > ".join(self.ranking_by_density_isp))
+        lines.append("ρ·Isp unit: s · kg/m³  |  Isp: s  |  c*: m/s  |  Tc: K")
         return "\n".join(lines)
 
     def summary(self) -> str:

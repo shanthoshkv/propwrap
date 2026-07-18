@@ -10,33 +10,26 @@ def run_cross_validation(
     fuel: str,
     oxidizer: str,
     of_ratio: float,
-    pc_bar: float,
-    eps: float,
+    pc_pa: float | None = None,
+    eps: float = 20.0,
     tolerance_pct: float = 5.0,
     fuel_temp_k: float | None = None,
     ox_temp_k: float | None = None,
+    *,
+    pc_bar: float | None = None,
 ) -> list[CrossValidationResult]:
-    """Compare CEA chamber γ against Cantera frozen γ at the same T, P, X.
+    """Compare CEA chamber γ against Cantera frozen γ at the same T, P, X."""
+    from propwrap.units import bar_to_pa
 
-    Parameters
-    ----------
-    tolerance_pct :
-        Maximum allowed percent difference for ``within_tolerance=True``.
-
-    Notes
-    -----
-    Divergence is expected when:
-
-    * CEA species set includes condensed phases or minor species absent from
-      the Cantera mechanism (gri30 / nasa_gas).
-    * CEA γ is equilibrium-aware while Cantera path is frozen composition.
-    * Major-species renormalization after mapping changes the mixture slightly.
-    """
+    if pc_pa is None:
+        if pc_bar is None:
+            raise ValueError("pc_pa or pc_bar required")
+        pc_pa = bar_to_pa(pc_bar)
     chamber = cea_backend.chamber_state(
         fuel,
         oxidizer,
         of_ratio,
-        pc_bar,
+        pc_pa,
         eps=eps,
         fuel_temp_k=fuel_temp_k,
         ox_temp_k=ox_temp_k,
@@ -44,7 +37,7 @@ def run_cross_validation(
     cea_gamma = float(chamber["gamma"])
     cantera_gamma = cantera_backend.gamma_frozen(
         T_k=float(chamber["T_k"]),
-        P_bar=float(chamber["P_bar"]),
+        P_pa=float(chamber["P_pa"]),
         species_mole_fractions=chamber["species_mole_fractions"],
         fallback_gamma=cea_gamma,
     )
