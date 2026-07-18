@@ -22,6 +22,7 @@ def add_blend(
     components: Sequence[tuple[str, float]] | Sequence[BlendComponent],
     *,
     kind: str = "fuel",
+    density_kg_m3: float | None = None,
     density_g_cm3: float | None = None,
     default_temp_k: float | None = None,
     notes: str = "",
@@ -37,9 +38,11 @@ def add_blend(
         Weight percents must sum to 100 ± 0.5.
     kind :
         ``"fuel"`` or ``"oxidizer"``.
-    density_g_cm3 :
-        Optional bulk liquid density [g/cm³]. If omitted, mass-weighted from
+    density_kg_m3 :
+        Optional bulk liquid density [kg/m³]. If omitted, mass-weighted from
         registry densities when all components have densities.
+    density_g_cm3 :
+        Optional density [g/cm³]; converted to kg/m³ if ``density_kg_m3`` omitted.
     default_temp_k :
         Optional default inlet temperature [K].
     notes :
@@ -97,23 +100,24 @@ def add_blend(
     # newFuelBlend returns e.g. MMH_50_UDMH_50 — we also register user alias
     blend_name = str(cea_name)
 
-    # density: user or mass-weighted
-    dens = density_g_cm3
+    dens = density_kg_m3
+    if dens is None and density_g_cm3 is not None:
+        from propwrap.units import g_cm3_to_kg_m3
+
+        dens = g_cm3_to_kg_m3(density_g_cm3)
     if dens is None:
-        from propwrap.registry import density_g_cm3 as reg_dens
+        from propwrap.registry import get_propellant
 
         acc = 0.0
-        wsum = 0.0
         ok = True
         for n, w in zip(names, pcts):
-            d = reg_dens(n)
+            rec = get_propellant(n)
+            d = rec.density_kg_m3 if rec else None
             if d is None:
                 ok = False
                 break
-            acc += (w / 100.0) / d  # volume fraction path for mixture density
-            wsum += w / 100.0
+            acc += (w / 100.0) / d
         if ok and acc > 0:
-            # ρ_mix = 1 / Σ(y_i/ρ_i) for mass fractions y_i
             dens = 1.0 / acc
 
     blend_map = {n: p for n, p in zip(names, pcts)}
@@ -122,7 +126,7 @@ def add_blend(
             name=name,
             kind=kind,  # type: ignore[arg-type]
             aliases=[blend_name] if blend_name != name else [],
-            density_g_cm3=dens,
+            density_kg_m3=dens,
             default_temp_k=default_temp_k,
             storage="storable",
             is_blend=True,
@@ -139,7 +143,7 @@ def add_blend(
                 name=blend_name,
                 kind=kind,  # type: ignore[arg-type]
                 aliases=[name],
-                density_g_cm3=dens,
+                density_kg_m3=dens,
                 default_temp_k=default_temp_k,
                 storage="storable",
                 is_blend=True,
@@ -162,5 +166,5 @@ def blend_card_summary(name: str) -> str:
     if rec is None or not rec.is_blend or not rec.blend_components:
         raise ValueError(f"'{name}' is not a registered blend")
     parts = [f"{n} {p:.1f}%" for n, p in rec.blend_components.items()]
-    dens = f", ρ={rec.density_g_cm3:.3f} g/cm³" if rec.density_g_cm3 else ""
+    dens = f", ρ={rec.density_kg_m3:.1f} kg/m³" if rec.density_kg_m3 else ""
     return f"{rec.name} ({rec.kind}): " + " + ".join(parts) + dens

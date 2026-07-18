@@ -52,6 +52,7 @@ def characterize(
     of_ratio: float | None = None,
     mixture_ratio: float | None = None,
     pc_bar: float | None = None,
+    pc_pa: float | None = None,
     eps: float | None = None,
     expansion_ratio: float | None = None,
     of_range: tuple[float, float, float] | None = None,
@@ -65,9 +66,11 @@ def characterize(
     """Workflow 1 — characterize one propellant pair.
 
     Runs optional design point, O/F scan, and density-Isp curve.
-    Plots only if ``plot=True`` or ``save=`` is set.
+    Plots only if ``plot=True`` or ``save=`` is set. Pressure in Pa (or pc_bar=).
     """
-    pc, ep = resolve_pc_eps(pc_bar, eps, expansion_ratio=expansion_ratio)
+    pc, ep = resolve_pc_eps(
+        None, eps, expansion_ratio=expansion_ratio, pc_pa=pc_pa, pc_bar=pc_bar
+    )
     m = Mixture(
         fuel,
         oxidizer,
@@ -79,7 +82,7 @@ def characterize(
     notes: list[str] = []
     point = None
     if of_v is not None:
-        point = m.evaluate(of=of_v, pc=pc, eps=ep, verbose=verbose)
+        point = m.evaluate(of=of_v, pc_pa=pc, eps=ep, verbose=verbose)
         notes.extend(point.warnings)
 
     # default O/F range by family
@@ -88,9 +91,11 @@ def characterize(
 
         of_range = _default_range_for(m.fuel, m.oxidizer, (1.8, 3.5, 0.1))
 
-    of_scan = m.scan_of(of_range, pc=pc, eps=ep, plot=plot, save=_save_path(save, "of_scan"))
+    of_scan = m.scan_of(
+        of_range, pc_pa=pc, eps=ep, plot=plot, save=_save_path(save, "of_scan")
+    )
     dens = m.density_impulse(
-        of_range, pc=pc, eps=ep, plot=plot, save=_save_path(save, "density_isp")
+        of_range, pc_pa=pc, eps=ep, plot=plot, save=_save_path(save, "density_isp")
     )
 
     if show and plot:
@@ -113,6 +118,7 @@ def compare_propellants(
     pairs: Sequence[str | tuple[str, str] | tuple[str, str, tuple[float, float, float]]],
     *,
     pc_bar: float | None = None,
+    pc_pa: float | None = None,
     eps: float | None = None,
     expansion_ratio: float | None = None,
     plot: bool = False,
@@ -126,7 +132,9 @@ def compare_propellants(
 
     ``pairs`` may be ``\"RP-1/LOX\"`` strings or ``(fuel, ox)`` tuples.
     """
-    pc, ep = resolve_pc_eps(pc_bar, eps, expansion_ratio=expansion_ratio)
+    pc, ep = resolve_pc_eps(
+        None, eps, expansion_ratio=expansion_ratio, pc_pa=pc_pa, pc_bar=pc_bar
+    )
     parsed: list[tuple[str, str] | tuple[str, str, tuple[float, float, float]]] = []
     for p in pairs:
         if isinstance(p, str):
@@ -141,7 +149,7 @@ def compare_propellants(
 
     trade = trade_at_optimum_of(
         parsed,
-        pc_bar=pc,
+        pc_pa=pc,
         eps=ep,
         cache_enabled=cache_enabled,
         apply_cryo_defaults=apply_cryo_defaults,
@@ -203,12 +211,12 @@ def define_blend(
         "performance": None,
     }
     if evaluate_with:
-        pc, ep = resolve_pc_eps(pc_bar, eps)
+        pc, ep = resolve_pc_eps(None, eps, pc_pa=None, pc_bar=pc_bar)
         if kind == "fuel":
             m = Mixture(blend_name, evaluate_with)
         else:
             m = Mixture(evaluate_with, blend_name)
-        r = m.evaluate(of=of, pc=pc, eps=ep, verbose=False)
+        r = m.evaluate(of=of, pc_pa=pc, eps=ep, verbose=False)
         out["performance"] = r
         if verbose:
             print(out["summary"])

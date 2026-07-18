@@ -6,7 +6,7 @@ from typing import Any
 
 from propwrap.registry import (
     PropellantRecord,
-    density_g_cm3 as registry_density,
+    get_density_kg_m3 as registry_density,
     get_propellant,
     list_registry,
     register,
@@ -144,6 +144,7 @@ def add_custom_propellant(
     kind: str = "fuel",
     temperature_k: float = 298.15,
     density_g_ml: float | None = None,
+    density_kg_m3: float | None = None,
     hf_unit: str = "cal/mol",
     comment: str = "",
 ) -> str:
@@ -172,11 +173,21 @@ def add_custom_propellant(
 
     name = name.strip()
     formula_cea = _to_cea_formula(formula.strip())
+    dens_si = density_kg_m3
+    if dens_si is None and density_g_ml is not None:
+        from propwrap.units import g_cm3_to_kg_m3
+
+        dens_si = g_cm3_to_kg_m3(density_g_ml)
     density_line = ""
-    if density_g_ml is not None:
-        if density_g_ml <= 0:
-            raise ValueError("density_g_ml must be > 0")
-        density_line = f"  rho={density_g_ml:.5f}\n"
+    dens_g_ml = density_g_ml
+    if dens_g_ml is None and dens_si is not None:
+        from propwrap.units import kg_m3_to_g_cm3
+
+        dens_g_ml = kg_m3_to_g_cm3(dens_si)
+    if dens_g_ml is not None:
+        if dens_g_ml <= 0:
+            raise ValueError("density must be > 0")
+        density_line = f"  rho={dens_g_ml:.5f}\n"
 
     prefix = "fuel" if kind == "fuel" else "oxid"
     card = (
@@ -193,7 +204,8 @@ def add_custom_propellant(
         "formula": formula_cea,
         "heat_of_formation": hf,
         "temperature_k": float(temperature_k),
-        "density_g_ml": density_g_ml,
+        "density_g_ml": dens_g_ml,
+        "density_kg_m3": dens_si,
         "_registered": False,
     }
     _ensure_registered(name)
@@ -203,7 +215,7 @@ def add_custom_propellant(
             name=name,
             kind=kind,  # type: ignore[arg-type]
             formula=formula_cea,
-            density_g_cm3=density_g_ml,
+            density_kg_m3=dens_si,
             default_temp_k=temperature_k,
             heat_of_formation_cal_mol=hf,
             storage="unknown",
@@ -242,25 +254,45 @@ def clear_custom_propellants() -> None:
     _CUSTOM_PROPELLANTS.clear()
 
 
-def liquid_density_g_cm3(name: str) -> float | None:
+def liquid_density_kg_m3(name: str) -> float | None:
+    """Liquid density [kg/m³] from registry."""
     d = registry_density(name)
     if d is not None:
         return d
     rec = get_propellant(name)
-    return rec.density_g_cm3 if rec else None
+    return rec.density_kg_m3 if rec else None
+
+
+# back-compat alias name
+def liquid_density_g_cm3(name: str) -> float | None:
+    from propwrap.units import kg_m3_to_g_cm3
+
+    d = liquid_density_kg_m3(name)
+    return kg_m3_to_g_cm3(d) if d is not None else None
+
+
+def bulk_density_kg_m3(
+    fuel: str, oxidizer: str, of_ratio: float
+) -> tuple[float | None, str | None]:
+    """Mixture bulk density ρ = (of+1) / (of/ρox + 1/ρfuel) [kg/m³]."""
+    rf = liquid_density_kg_m3(fuel)
+    ro = liquid_density_kg_m3(oxidizer)
+    if rf is None or ro is None or of_ratio <= 0:
+        return None, None
+    bulk = (of_ratio + 1.0) / (of_ratio / ro + 1.0 / rf)
+    basis = f"ρ_fuel={rf:.1f}, ρ_ox={ro:.1f} kg/m³ (registry)"
+    return bulk, basis
 
 
 def bulk_density_g_cm3(
     fuel: str, oxidizer: str, of_ratio: float
 ) -> tuple[float | None, str | None]:
-    """Mixture bulk density ρ = (of+1) / (of/ρox + 1/ρfuel) [g/cm³]."""
-    rf = liquid_density_g_cm3(fuel)
-    ro = liquid_density_g_cm3(oxidizer)
-    if rf is None or ro is None or of_ratio <= 0:
-        return None, None
-    bulk = (of_ratio + 1.0) / (of_ratio / ro + 1.0 / rf)
-    basis = f"ρ_fuel={rf:.4f}, ρ_ox={ro:.4f} g/cm³ (registry)"
-    return bulk, basis
+    from propwrap.units import kg_m3_to_g_cm3
+
+    bulk, basis = bulk_density_kg_m3(fuel, oxidizer, of_ratio)
+    if bulk is None:
+        return None, basis
+    return kg_m3_to_g_cm3(bulk), basis
 
 
 def cryo_default_temps_k(

@@ -18,6 +18,7 @@ def test_performance_returns_model(lox_rp1: Propellant) -> None:
     assert r.fuel == "RP1"
     assert r.oxidizer == "LOX"
     assert r.of_ratio == pytest.approx(2.56)
+    assert r.pc_pa == pytest.approx(7.0e6, rel=1e-6)
     assert r.pc_bar == pytest.approx(70.0)
     assert r.eps == pytest.approx(20.0)
 

@@ -26,7 +26,10 @@ def sanity_check(r: PerformanceResult) -> list[str]:
         w.append(f"c*={r.c_star:.1f} m/s outside typical 1000–3500 m/s band")
     if r.tc_kelvin < 1500 or r.tc_kelvin > 4500:
         w.append(f"Tc={r.tc_kelvin:.1f} K outside typical 1500–4500 K band")
-    if r.eps > 40 and r.isp_sl_shifting < 0.85 * r.isp_vac_shifting:
+    # pe should be positive for expanded nozzles
+    if r.pe_pa <= 0 and r.eps > 1.5:
+        w.append(f"pe_pa={r.pe_pa} non-positive")
+    if r.eps > 40 and r.isp_vac_shifting > 0 and r.isp_sl_shifting < 0.85 * r.isp_vac_shifting:
         w.append(
             f"ε={r.eps:.1f} large for sea-level: overexpansion likely "
             f"(Isp_sl/Isp_vac={r.isp_sl_shifting / r.isp_vac_shifting:.2f})"

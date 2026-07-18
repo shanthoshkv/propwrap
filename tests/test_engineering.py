@@ -12,9 +12,11 @@ def test_stations_and_pe() -> None:
     assert r.chamber is not None and r.exit is not None
     assert r.chamber.cp_j_kg_k > 1000
     assert r.chamber.mu_pa_s > 0
-    assert r.pe_bar > 0
+    assert r.pe_pa > 0
     assert r.pc_over_pe > 1
     assert r.density_impulse_vac_shifting is not None
+    assert r.bulk_density_kg_m3 is not None and r.bulk_density_kg_m3 > 500
+    assert r.ve_vac_shifting > 1000
     assert r.warnings is not None
 
 
@@ -23,6 +25,7 @@ def test_ambient_altitude() -> None:
     vacish = p.ambient_performance(2.56, 70.0, 20.0, pamb_bar=0.01)
     sl = p.ambient_performance(2.56, 70.0, 20.0, pamb_bar=1.01325)
     assert float(vacish["isp_s"]) > float(sl["isp_s"])
+    assert "ve_m_s" in vacish
 
 
 def test_gamma_profile_mw() -> None:

@@ -150,23 +150,25 @@ def plot_pc_sweep(
     save_path: str | None = None,
 ) -> Figure:
     """Isp vs chamber pressure."""
-    if sweep_result.sweep_variable != "pc_bar":
-        raise ValueError("plot_pc_sweep requires sweep_variable='pc_bar'")
+    if sweep_result.sweep_variable != "pc_pa":
+        raise ValueError("plot_pc_sweep requires sweep_variable='pc_pa'")
 
-    xs = sweep_result.values
+    from propwrap.units import pa_to_mpa
+
+    xs = [pa_to_mpa(v) for v in sweep_result.values]
     isp = [r.isp_vac_shifting for r in sweep_result.results]
 
     fig, ax = plt.subplots(figsize=(8, 4.5))
     apply_dark_theme(fig, ax)
     ax.plot(xs, isp, color=ACCENT, lw=2.0)
-    ax.set_xlabel("Chamber pressure [bar]")
+    ax.set_xlabel("Chamber pressure [MPa]")
     ax.set_ylabel("Isp vacuum [s]")
     opt = sweep_result.optimum("isp_vac_shifting")
     _annotate_optimum(
         ax,
-        opt.pc_bar,
+        pa_to_mpa(opt.pc_pa),
         opt.isp_vac_shifting,
-        f"opt Pc={opt.pc_bar:.1f} bar\nIsp={opt.isp_vac_shifting:.1f}s",
+        f"opt Pc={pa_to_mpa(opt.pc_pa):.2f} MPa\nIsp={opt.isp_vac_shifting:.1f}s",
     )
     ax.set_title("Chamber pressure sweep — vacuum Isp")
     fig.tight_layout()
@@ -258,7 +260,7 @@ def plot_density_isp(
         apply_dark_theme(fig, ax2)
         y2 = [v if v is not None else float("nan") for v in di]
         ax2.plot(xs, y2, color=SECONDARY, lw=1.5, ls="--", label="ρ·Isp")
-        ax2.set_ylabel("Density-Isp [s·g/cm³]", color=SECONDARY)
+        ax2.set_ylabel("Density-Isp [s·kg/m³]", color=SECONDARY)
         if curve.optimum_density_isp_of is not None:
             ax2.axvline(
                 curve.optimum_density_isp_of,

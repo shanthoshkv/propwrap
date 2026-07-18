@@ -38,11 +38,11 @@ def validate_of(of_ratio: float) -> None:
         )
 
 
-def validate_pc(pc_bar: float) -> None:
-    if pc_bar <= 0:
+def validate_pc(pc_pa: float) -> None:
+    if pc_pa <= 0:
         raise PropwrapError(
-            f"chamber pressure must be > 0 bar, got {pc_bar}. "
-            "Example: pc=70 for 70 bar."
+            f"chamber pressure must be > 0 Pa, got {pc_pa}. "
+            "Example: pc=7e6 or pc_bar=70 or pc_mpa=7."
         )
 
 

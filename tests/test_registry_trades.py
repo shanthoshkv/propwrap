@@ -15,7 +15,7 @@ from propwrap import (
 def test_registry_lookup_and_filter() -> None:
     rp = get_propellant("RP-1")
     assert rp is not None and rp.name == "RP1"
-    assert rp.density_g_cm3 is not None
+    assert rp.density_kg_m3 is not None and rp.density_kg_m3 > 500
     lox = get_propellant("LOX", kind="oxidizer")
     assert lox is not None and lox.storage == "cryogenic"
     storables = list_registry(storage="storable", kind="fuel")
@@ -49,8 +49,8 @@ def test_density_isp_curve_rp1() -> None:
         apply_cryo_defaults=False,
     )
     assert len(curve.points) >= 4
-    assert all(p.bulk_density_g_cm3 and p.bulk_density_g_cm3 > 0.5 for p in curve.points)
-    assert all(p.density_isp and p.density_isp > 100 for p in curve.points)
+    assert all(p.bulk_density_kg_m3 and p.bulk_density_kg_m3 > 500 for p in curve.points)
+    assert all(p.density_isp and p.density_isp > 1e5 for p in curve.points)
     assert 2.0 <= curve.optimum_isp_of <= 3.0
     # density-Isp optimum may differ slightly from Isp optimum
     assert curve.optimum_density_isp_of is not None

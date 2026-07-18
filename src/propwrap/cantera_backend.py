@@ -89,16 +89,27 @@ def map_species(species_mole_fractions: dict[str, float]) -> dict[str, float]:
 
 def gamma_frozen(
     T_k: float,
-    P_bar: float,
-    species_mole_fractions: dict[str, float],
+    P_pa: float | None = None,
+    species_mole_fractions: dict[str, float] | None = None,
     fallback_gamma: float | None = None,
+    *,
+    P_bar: float | None = None,
 ) -> float:
-    """Frozen γ = cp/cv at (T [K], P [bar]) for the given mole fractions.
+    """Frozen γ = cp/cv at (T [K], P [Pa]) for the given mole fractions.
 
-    If composition cannot be set (empty map / missing species), returns
-    ``fallback_gamma`` when provided, else raises.
+    ``P_bar`` is accepted for back-compat and converted to Pa.
     """
     import cantera as ct
+
+    if species_mole_fractions is None:
+        species_mole_fractions = {}
+    if P_pa is None:
+        if P_bar is not None:
+            from propwrap.units import bar_to_pa
+
+            P_pa = bar_to_pa(P_bar)
+        else:
+            raise ValueError("P_pa (or P_bar) required")
 
     mapped = map_species(species_mole_fractions)
     gas = _get_solution()
@@ -108,7 +119,6 @@ def gamma_frozen(
             return float(fallback_gamma)
         raise ValueError("No mappable species for Cantera γ evaluation")
 
-    # Keep only species present in the phase
     species_in_phase = {s: x for s, x in mapped.items() if s in gas.species_names}
     if not species_in_phase:
         if fallback_gamma is not None:
@@ -119,8 +129,7 @@ def gamma_frozen(
     total = sum(species_in_phase.values())
     species_in_phase = {k: v / total for k, v in species_in_phase.items()}
 
-    P_pa = P_bar * 1e5
-    gas.TPX = T_k, P_pa, species_in_phase
+    gas.TPX = T_k, float(P_pa), species_in_phase
     # Frozen γ
     cp = gas.cp_mass
     cv = gas.cv_mass
@@ -131,11 +140,11 @@ def gamma_frozen(
 
 def gamma_from_cea_chamber(
     T_k: float,
-    P_bar: float,
+    P_pa: float,
     species_mole_fractions: dict[str, float],
     cea_gamma: float,
 ) -> float:
     """Convenience: frozen γ with CEA γ as fallback."""
     return gamma_frozen(
-        T_k, P_bar, species_mole_fractions, fallback_gamma=cea_gamma
+        T_k, P_pa, species_mole_fractions, fallback_gamma=cea_gamma
     )
