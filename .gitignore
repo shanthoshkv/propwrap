@@ -167,3 +167,7 @@ propwrap_methalox_*/
 propwrap_hydrolox_*/
 propwrap_storable_*/
 propwrap_custom_*/
+
+# secrets
+pypi token.txt
+*token*.txt
