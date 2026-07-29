@@ -44,6 +44,31 @@ def validate_pc(pc_pa: float) -> None:
             f"chamber pressure must be > 0 Pa, got {pc_pa}. "
             "Example: pc=7e6 or pc_bar=70 or pc_mpa=7."
         )
+    # Heuristic: user likely passed bar as Pa (e.g. pc=70 instead of pc_bar=70)
+    if 1.0 < pc_pa < 500.0:
+        raise PropwrapError(
+            f"chamber pressure pc={pc_pa} Pa is unrealistically low for a liquid rocket "
+            f"(that is only {pc_pa:.4g} Pa ≈ {pc_pa/1e5:.2e} bar). "
+            "If you meant 70 bar, use pc_bar=70 or pc=7_000_000 (Pa) or pc_mpa=7. "
+            "Remember: keyword pc / pc_pa is always pascals (SI)."
+        )
+    if 500.0 <= pc_pa < 1.0e5:
+        # 0.005–1 bar: possible but warn via PropwrapError soft? keep as error for students
+        raise PropwrapError(
+            f"pc={pc_pa} Pa ({pc_pa/1e5:.4g} bar) is very low. "
+            "Did you mean pc_bar={0} (bar) or pc_mpa=...? "
+            "SI path: pc is in pascals (70 bar = 7e6 Pa).".format(pc_pa)
+        )
+
+
+def warn_if_ambiguous_pc(pc: float | None, pc_bar: float | None) -> str | None:
+    """Return a warning string if pc looks like bar mistaken for Pa (non-fatal)."""
+    if pc is not None and pc_bar is None and 1.0 < pc < 500.0:
+        return (
+            f"pc={pc} looks like bar, but pc means pascals. "
+            "Use pc_bar={} or pc={}e6.".format(pc, pc)
+        )
+    return None
 
 
 def validate_eps(eps: float) -> None:

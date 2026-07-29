@@ -109,7 +109,38 @@ def main(argv: Sequence[str] | None = None) -> int:
     p_ls = sub.add_parser("list", help="List propellants (alias: list-propellants)")
     p_ls.add_argument("--cryogenic", action="store_true")
     p_ls.add_argument("--storable", action="store_true")
+    p_ls.add_argument(
+        "--of-hints",
+        action="store_true",
+        help="Show typical O/F ranges for fuels",
+    )
     sub.add_parser("list-propellants", help="Alias of list")
+
+    # homework / lab report pack
+    p_hw = sub.add_parser(
+        "homework",
+        help="Generate student lab folder (summary.md, CSV, plots)",
+    )
+    p_hw.add_argument(
+        "preset",
+        nargs="?",
+        default="kerolox",
+        choices=["kerolox", "methalox", "hydrolox", "storable", "custom"],
+        help="Homework preset (default: kerolox)",
+    )
+    p_hw.add_argument("--name", default="Student", help="Student name for folder/report")
+    p_hw.add_argument("--out", default=None, help="Output directory (default: auto)")
+    p_hw.add_argument("--fuel", default=None)
+    p_hw.add_argument("--ox", default=None)
+    p_hw.add_argument("--of", type=float, default=None)
+    p_hw.add_argument("--pc-bar", type=float, default=None, dest="pc_bar")
+    p_hw.add_argument("--eps", type=float, default=None)
+    p_hw.add_argument("--no-plots", action="store_true")
+    p_hw.add_argument(
+        "--compare",
+        default=None,
+        help='Optional combos for trade plot, e.g. "RP-1/LOX,CH4/LOX,LH2/LOX"',
+    )
 
     sub.add_parser("clear-cache", help="Clear SQLite cache")
 
@@ -132,6 +163,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _cmd_density_isp(args)
     if cmd in ("list", "list-propellants"):
         return _cmd_list(args)
+    if cmd == "homework":
+        return _cmd_homework(args)
     if cmd == "clear-cache":
         from propwrap.cache import clear_default_cache
 
@@ -255,12 +288,18 @@ def _cmd_trade(args: argparse.Namespace) -> int:
 def _cmd_compare_fixed(args: argparse.Namespace) -> int:
     from propwrap import Mixture
 
+    print(
+        "NOTE: Fixed-O/F compare can be unfair across propellants "
+        "(e.g. O/F=2.5 is poor for LH2). Prefer: propwrap compare-pairs ...",
+        file=sys.stderr,
+    )
     rows = []
     for combo in args.combos.split(","):
         fuel, ox = combo.strip().split("/", 1)
         r = Mixture(fuel.strip(), ox.strip()).evaluate(
-            of=args.of, pc=args.pc, eps=args.eps
+            of=args.of, pc=args.pc, pc_bar=None, eps=args.eps
         )
+        # if pc looks wrong, evaluate may raise; allow --pc as Pa only
         rows.append(
             {
                 "combo": f"{r.fuel}/{r.oxidizer}",
@@ -296,17 +335,109 @@ def _cmd_density_isp(args: argparse.Namespace) -> int:
 def _cmd_list(args: argparse.Namespace) -> int:
     from propwrap import list_propellants, list_registry
 
+    storage = None
     if getattr(args, "cryogenic", False):
-        for r in list_registry(storage="cryogenic"):
-            print(f"{r.kind:9} {r.name}")
-        return 0
+        storage = "cryogenic"
     if getattr(args, "storable", False):
-        for r in list_registry(storage="storable"):
-            print(f"{r.kind:9} {r.name}")
+        storage = "storable"
+
+    if getattr(args, "of_hints", False) or storage:
+        print(f"{'kind':9} {'name':12} {'storage':14} {'typical O/F':14} density")
+        print("-" * 70)
+        for r in list_registry(storage=storage):  # type: ignore[arg-type]
+            of = (
+                f"{r.typical_of_range[0]:g}–{r.typical_of_range[1]:g}"
+                if r.typical_of_range
+                else "—"
+            )
+            dens = f"{r.density_kg_m3:.0f} kg/m³" if r.density_kg_m3 else "—"
+            print(f"{r.kind:9} {r.name:12} {r.storage:14} {of:14} {dens}")
         return 0
+
     data = list_propellants()
     print("Fuels:", ", ".join(data["fuels"]))
     print("Oxidizers:", ", ".join(data["oxidizers"]))
+    print("(tip: propwrap list --of-hints  → typical O/F ranges for students)")
+    return 0
+
+
+def _cmd_homework(args: argparse.Namespace) -> int:
+    from propwrap.reports import homework_folder_name, write_lab_report
+
+    presets = {
+        "kerolox": {
+            "fuel": "RP-1",
+            "oxidizer": "LOX",
+            "of_ratio": 2.56,
+            "pc_bar": 70.0,
+            "eps": 20.0,
+            "compare": ["RP-1/LOX", "CH4/LOX", "LH2/LOX"],
+        },
+        "methalox": {
+            "fuel": "CH4",
+            "oxidizer": "LOX",
+            "of_ratio": 3.0,
+            "pc_bar": 100.0,
+            "eps": 25.0,
+            "compare": ["CH4/LOX", "RP-1/LOX", "LH2/LOX"],
+        },
+        "hydrolox": {
+            "fuel": "LH2",
+            "oxidizer": "LOX",
+            "of_ratio": 5.5,
+            "pc_bar": 100.0,
+            "eps": 40.0,
+            "compare": ["LH2/LOX", "CH4/LOX", "RP-1/LOX"],
+        },
+        "storable": {
+            "fuel": "MMH",
+            "oxidizer": "N2O4",
+            "of_ratio": 2.0,
+            "pc_bar": 10.0,
+            "eps": 40.0,
+            "compare": ["MMH/N2O4", "UDMH/N2O4", "RP-1/LOX"],
+        },
+        "custom": {
+            "fuel": args.fuel or "RP-1",
+            "oxidizer": args.ox or "LOX",
+            "of_ratio": args.of or 2.5,
+            "pc_bar": args.pc_bar or 70.0,
+            "eps": args.eps or 20.0,
+            "compare": None,
+        },
+    }
+    cfg = dict(presets[args.preset])
+    if args.fuel:
+        cfg["fuel"] = args.fuel
+    if args.ox:
+        cfg["oxidizer"] = args.ox
+    if args.of is not None:
+        cfg["of_ratio"] = args.of
+    if args.pc_bar is not None:
+        cfg["pc_bar"] = args.pc_bar
+    if args.eps is not None:
+        cfg["eps"] = args.eps
+
+    compare = None
+    if args.compare:
+        compare = [c.strip() for c in args.compare.split(",") if c.strip()]
+    elif cfg.get("compare"):
+        compare = cfg["compare"]
+
+    out = args.out or homework_folder_name(args.name, args.preset)
+    path = write_lab_report(
+        out,
+        fuel=cfg["fuel"],
+        oxidizer=cfg["oxidizer"],
+        of_ratio=float(cfg["of_ratio"]),
+        pc_bar=float(cfg["pc_bar"]),
+        eps=float(cfg["eps"]),
+        student_name=args.name,
+        compare_pairs=compare,
+        make_plots=not args.no_plots,
+    )
+    print(f"Lab pack written to: {path.resolve()}")
+    print(f"  Open {path / 'summary.md'} and read assumptions.txt first.")
     return 0
 
 

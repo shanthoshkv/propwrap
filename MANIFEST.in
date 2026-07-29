@@ -1,0 +1,16 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include pyproject.toml
+include requirements-student.txt
+graft src/propwrap
+graft tests
+graft docs
+graft examples
+graft website
+global-exclude *.py[cod] __pycache__ *.so .DS_Store Thumbs.db
+prune src/propwrap.egg-info
+prune .venv
+prune .mypy_cache
+prune .pytest_cache
+exclude propwrap_master_prompt.md

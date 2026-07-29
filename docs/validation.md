@@ -1,185 +1,175 @@
 # propwrap validation report
 
-**Status:** theoretical CEA validation (ideal 1-D).  
+**Status:** Theoretical NASA CEA validation (ideal 1-D).  
 **Not** flight-engine delivered performance.  
-**Not** flight certification evidence.
+**Not** flight certification evidence.  
+**Physics audit:** 2026-07-29 — bit-level CEA match + SI identities verified.
 
-This document is the human-readable companion to `tests/data/validation_catalog.json` and `tests/test_validation_suite.py`.
+Companion files:
 
----
+- [`tests/data/validation_catalog.json`](../tests/data/validation_catalog.json) — machine-readable anchors  
+- [`tests/test_validation_suite.py`](../tests/test_validation_suite.py) — catalog-driven tests  
+- [`tests/test_physics_identities.py`](../tests/test_physics_identities.py) — hard physics identities  
 
-## 1. What we claim
-
-| Claim | Supported? |
-|-------|------------|
-| propwrap matches RocketCEA/NASA CEA for the same inputs | **Yes** (golden docs + regression) |
-| Numbers equal flight Merlin / RS-25 Isp | **No** — those include engine efficiency |
-| Frozen ≤ shifting Isp (ideal) | **Yes** |
-| SI-adjacent units on public API | **Yes** (leak guards) |
-| Cantera γ identical to CEA | **No** — major-species frozen compare only |
-
----
-
-## 2. Methodology
-
-1. **Primary engine:** NASA CEA FORTRAN via [RocketCEA](https://rocketcea.readthedocs.io/) (Gordon & McBride CEA; NASA RP-1311 methodology).
-2. **propwrap role:** unit conversion (bar/K/m/s), structured results, cache — not a second thermo model.
-3. **Validation layers:**
-   - **A.** Published RocketCEA documentation numbers (highest external trust)
-   - **B.** Multi-propellant regression anchors at standard Pc/ε
-   - **C.** Physical invariants across ≥10 combos
-   - **D.** Engineering trends (ranking, ε, O/F peak, ambient)
-   - **E.** Unit-system guards
-   - **F.** Cantera chamber-γ band (documented mismatch allowed)
-   - **G.** Density-impulse ordering (handbook liquid densities)
-
----
-
-## 3. Layer A — RocketCEA documentation goldens
-
-**Source:** [RocketCEA QuickStart](https://rocketcea.readthedocs.io/en/latest/quickstart.html)  
-“Test The Install” / `basic_cea.py` published output for **LOX/LH2**, `Pc = 100 psia`, `ε = 40`.
-
-| O/F | Published Isp [s] | Role |
-|-----|-------------------|------|
-| (default get_Isp) | 374.3036… | install smoke |
-| 2 | 424.360 | fuel-rich |
-| 3 | 445.444 | |
-| 4 | 453.133 | |
-| 5 | 453.240 | near peak |
-| 6 | 448.190 | |
-| 7 | 438.743 | |
-| 8 | 424.700 | oxidizer-rich |
-
-**Tolerance:** 0.1% relative.  
-**Result:** propwrap `performance()` matches bit-for-bit with RocketCEA `get_Isp` at the same Pc/MR/ε (verified).
-
-Also: default `CEA_Obj(oxName='LOX', fuelName='LH2').get_Isp()` = **374.30361765576265** s (same page).
-
----
-
-## 4. Layer B — Standard-condition regression matrix
-
-Conditions often used in literature comparisons: **Pc ≈ 1000 psia (68.95 bar), ε = 40**, plus design-like points.
-
-| ID | Propellants | O/F | Pc [bar] | ε | Isp_vac (shifting) [s] | Band / note |
-|----|-------------|-----|----------|---|------------------------|-------------|
-| REG-RP1-LOX-1000psia-eps40 | RP1/LOX | 2.3 | 68.95 | 40 | ~352.3 | lit. theor. ~340–370 |
-| REG-RP1-LOX-70bar-eps20 | RP1/LOX | 2.56 | 70 | 20 | ~343.7 | master-prompt case |
-| REG-LH2-LOX-1000psia-eps40-OF5 | LH2/LOX | 5.0 | 68.95 | 40 | ~454.9 | lit. ~445–465 |
-| REG-LH2-LOX-RS25-class | LH2/LOX | 5.5 | 100 | 69 | ~463.7 | **theoretical**; flight RS-25 ~452 s delivered |
-| REG-CH4-LOX-… | CH4/LOX | 3.2 | 68.95 | 40 | ~367.6 | methane class ~350–380 |
-| REG-MMH-N2O4-… | MMH/N2O4 | 2.0 | 68.95 | 40 | ~338.6 | hypergolic ~320–355 |
-| REG-UDMH-N2O4 | UDMH/N2O4 | 2.6 | 68.95 | 40 | ~338.3 | |
-| REG-A50-N2O4 | A50/N2O4 | 2.0 | 68.95 | 40 | ~340.9 | |
-| REG-ETHANOL-LOX | Ethanol/LOX | 1.5 | 68.95 | 40 | ~336.8 | |
-
-**Regression tolerance:** typically 1.5–2% vs frozen catalog numbers (guards against silent thermo/unit regressions).  
-**Literature bands:** order-of-magnitude consistency with public CEA-class summaries (e.g. Encyclopedia Astronautica LOX/LH2, LOX/kerosene, N2O4/MMH pages) — **not** page-cited Sutton edition tables (those require manual transcription from a physical edition).
-
-### Important distinction
-
-| Quantity | Example |
-|----------|---------|
-| CEA theoretical LOX/RP-1 vac Isp @ ε=20–40 | ~340–355 s |
-| Merlin-class **flight** vac Isp | ~311–348 s |
-| CEA LOX/LH2 theoretical @ high ε | ~450–465 s |
-| RS-25 **flight** vac Isp | ~452 s (high η; close to theory) |
-
-propwrap reports the **CEA theoretical** column unless you apply `eta_cstar` / `eta_cf`.
-
----
-
-## 5. Layer C — Physical invariants
-
-Checked on 11+ propellant/condition combos:
-
-1. `isp_vac_shifting ≥ isp_vac_frozen`
-2. `isp_vac_shifting ≥ isp_sl_shifting`
-3. `gamma_exit ≥ gamma_chamber` (γ rises as T falls in expansion for these products)
-4. `Te < Tt < Tc`
-5. `pe > 0`, `Pc/Pe > 1`
-6. Chamber `cp` present and positive (SI)
-
----
-
-## 6. Layer D — Trends
-
-| Trend | Expectation | Test |
-|-------|-------------|------|
-| Propellant ranking @ ~69 bar, ε=40 | LH2 > CH4 > RP1 > MMH/NTO | `test_propellant_ranking_vac_isp` |
-| Area ratio | higher ε → higher Isp_vac | `test_higher_eps_raises_vac_isp` |
-| O/F banana | interior peak for RP-1, CH4 | sweep peak tests |
-| Ambient | lower Pamb → higher Isp | monotone ambient test |
-| Density impulse | RP-1 beats LH2 on ρ·Isp | density ordering test |
-
----
-
-## 7. Layer E — Units
-
-Public API must never look like English CEA printout:
-
-- `c*` in **m/s** (~1500–2400), not ft/s (~5000–7800)
-- `T` in **K** (~3000–3700), not Rankine (~5400–6700)
-- `Pc` in **bar**
-
----
-
-## 8. Layer F — CEA vs Cantera γ
-
-Chamber γ compared via major-species mapping into Cantera (`gri30` / `nasa_gas`).
-
-| Allowed | Meaning |
-|---------|---------|
-| &lt; ~15% | `within_tolerance` at default 15% |
-| &lt; 25% | hard CI fail threshold |
-
-Divergence is expected: condensed phases, minor radicals, equilibrium vs frozen, mechanism species set. This is a **sanity cross-check**, not a proof of CEA correctness.
-
----
-
-## 9. Primary references
-
-1. **Gordon, S.; McBride, B. J.** *Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications.* NASA RP-1311 (CEA).  
-2. **RocketCEA documentation** — https://rocketcea.readthedocs.io/ (QuickStart published LOX/LH2 Isp table).  
-3. **RocketCEA** Python package wrapping NASA CEA FORTRAN (baseline tests: v1.2.3).  
-4. **Public CEA-class propellant summaries** (Astronautix LOX/LH2, LOX/kerosene, N2O4/MMH) — used only for **wide literature bands**, not point references.  
-5. **Sutton, G. P.; Biblarz, O.** *Rocket Propulsion Elements* — recommended for manual table cross-checks; specific edition/page numbers are **not** transcribed here without a physical copy (see §11).
-
----
-
-## 10. How to re-run
+Run:
 
 ```bash
-pytest tests/test_validation_suite.py tests/test_known_values.py -v
-```
-
-Full suite:
-
-```bash
+pytest tests/test_physics_identities.py tests/test_validation_suite.py tests/test_known_values.py -v
 pytest -q
 ```
 
 ---
 
-## 11. Known gaps (honesty)
+## 1. What we claim (and do not)
 
-| Gap | Impact |
-|-----|--------|
-| No page-cited Sutton table transcription | Literature bands are wide, not tight textbook points |
-| No independent NASA CEARUN file dump in-repo | Goldens are RocketCEA-doc + local CEA |
-| Cantera is not full multi-phase CEA | γ compare is approximate |
-| No kinetics / finite-rate nozzle | Ideal shifting/frozen only |
-| Cryogenic defaults optional | Inlet T changes Isp — document your temps |
-
-**To strengthen further:** run NASA CEAWeb/CEARUN on the same cards, archive `.out` files under `tests/data/cea_outputs/`, and add point-wise asserts against those files.
+| Claim | Supported? | How secured |
+|-------|------------|-------------|
+| propwrap matches RocketCEA/NASA CEA for same inputs | **Yes** | Bit-level `get_Isp` identity tests |
+| SI public units (Pa, K, m/s, kg/m³) | **Yes** | Unit guards + ideal-gas ρ check |
+| \(v_e = I_{sp}\,g_0\) with \(g_0=9.80665\,\mathrm{m/s^2}\) | **Yes** | Identity test |
+| \(C_{f,\mathrm{vac}} = v_e / c^*\) | **Yes** | Identity test |
+| \(P_c/P_e\) consistent with stored pressures | **Yes** | Identity test |
+| Numbers equal flight Merlin / RS-25 Isp | **No** | Explicitly excluded (delivered vs theoretical) |
+| Cantera γ identical to CEA | **No** | Major-species frozen compare only |
 
 ---
 
-## 12. Change control
+## 2. Primary secured sources
 
-If a regression test fails after a dependency bump:
+### 2.1 NASA CEA methodology
 
-1. Confirm whether RocketCEA/CEA thermo data changed.
-2. Update `validation_catalog.json` **only** with measured new values + note in this file.
-3. Never “widen tolerance until green” without a written reason.
+| Field | Detail |
+|-------|--------|
+| **Document** | Gordon, S.; McBride, B. J. *Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications* |
+| **IDs** | NASA RP-1311 Part I (analysis, 1994); Part II (user manual, 1996) |
+| **NTRS** | [19950013764](https://ntrs.nasa.gov/citations/19950013764) (Part I entry point) |
+| **Role** | Defines the rocket equilibrium / frozen performance problem that RocketCEA wraps |
+
+propwrap does **not** re-implement CEA chemistry. It wraps NASA CEA FORTRAN through RocketCEA and is responsible for **API, SI conversion, and result integrity**.
+
+### 2.2 RocketCEA published numerical goldens
+
+| Field | Detail |
+|-------|--------|
+| **Document** | RocketCEA QuickStart — “Test The Install” / `basic_cea.py` |
+| **URL** | https://rocketcea.readthedocs.io/en/latest/quickstart.html |
+| **Cases** | LOX/LH₂, Pc = 100 psia, ε = 40, O/F = 2…8 + default install Isp |
+| **Tolerance** | ≤ 0.1% relative (effectively bit-level) |
+
+Verified 2026-07-29: `propwrap` Isp equals `CEA_Obj.get_Isp` to machine precision for O/F = 2–8.
+
+| O/F | Published Isp [s] | Role |
+|-----|-------------------|------|
+| default `get_Isp()` | 374.30361765576265 | install smoke |
+| 2 | 424.3597085736007 | fuel-rich |
+| 3 | 445.44434236555196 | |
+| 4 | 453.13271951921837 | |
+| 5 | 453.240429182719 | near peak |
+| 6 | 448.190232998362 | |
+| 7 | 438.74340042907266 | |
+| 8 | 424.6998266323161 | ox-rich |
+
+### 2.3 Metrology / SI constants
+
+| Constant | Value | Source / role |
+|----------|-------|----------------|
+| \(g_0\) | **9.80665 m/s²** | CGPM/BIPM conventional standard gravity — \(v_e = I_{sp} g_0\) |
+| 1 bar | **10⁵ Pa exactly** | SI-derived relationship — `pc_bar` ↔ `pc_pa` |
+| \(R_\mathrm{univ}\) | **8314.462618 J/(kmol·K)** | Chamber density check \( \rho \approx P M_w / (R T) \) |
+
+### 2.4 Secondary literature bands (sanity only)
+
+Wide **CEA-class theoretical** envelopes (not flight, not page-cited Sutton tables):
+
+| Family | Rough theoretical vac Isp band | Use |
+|--------|--------------------------------|-----|
+| LOX / kerosene | ~340–370 s (high ε) | envelope only |
+| LOX / LH₂ | ~445–465 s (ε~40, Pc~1000 psia class) | envelope only |
+| N₂O₄ / MMH | ~320–355 s | envelope only |
+
+**Explicitly not used as point references:** Merlin ~311–348 s flight, RS-25 ~452 s flight (delivered).
+
+---
+
+## 3. Physics identities (must never drift)
+
+Implemented in `tests/test_physics_identities.py` and runtime `sanity_check()`:
+
+1. **\(v_{e,\mathrm{vac}} = I_{sp,\mathrm{vac}} \times g_0\)**  
+2. **\(C_{f,\mathrm{vac}} = v_e / c^*\)**  
+3. **\(P_c / P_e = \) CEA `Pc/Pe`**  
+4. **Chamber \(\rho \approx P M_w / (R T)\)** (relative error ≪ 1% for tested LOX/RP-1 point)  
+5. **Temperature order** \(T_e < T_t < T_c\)  
+6. **γ order** \(\gamma_e \ge \gamma_c\) for typical products (γ rises as T falls)  
+7. **Shifting ≥ frozen** vacuum Isp; **vac ≥ SL** Isp  
+8. **c\* SI band** (~1500–2200 m/s kerolox; not ~5900 ft/s)  
+9. **Density impulse** \(\rho I_{sp} = I_{sp} \times \rho_\mathrm{bulk}\) with liquid bulk density  
+
+### Note on γ vs \(c_p/c_v\)
+
+CEA chamber **transport** \(c_p\) can include equilibrium dissociation contributions, while CEA **performance γ** is the isentropic exponent used for nozzle relations. Therefore \(\gamma \neq c_p/(c_p-R)\) exactly is **expected**, not a conversion bug.
+
+---
+
+## 4. Multi-propellant regression matrix
+
+Locked to NASA CEA via RocketCEA 1.2.x on the propwrap stack. Citations are **CEA reproducibility + RP-1311 methodology**, not flight tables.
+
+| ID | Pair | O/F | Pc | ε | Isp_vac (shifting) |
+|----|------|-----|----|---|---------------------|
+| REG-RP1-LOX-1000psia-eps40 | RP1/LOX | 2.3 | ~1000 psia | 40 | ~352.3 s |
+| REG-RP1-LOX-70bar-eps20 | RP1/LOX | 2.56 | 70 bar | 20 | ~343.7 s |
+| REG-LH2-LOX-1000psia-eps40-OF5 | LH2/LOX | 5.0 | ~1000 psia | 40 | ~454.9 s |
+| REG-LH2-LOX-RS25-class | LH2/LOX | 5.5 | 100 bar | 69 | ~463.7 s *theoretical* |
+| REG-CH4-LOX-1000psia-eps40-OF3.2 | CH4/LOX | 3.2 | ~1000 psia | 40 | ~367.6 s |
+| REG-MMH-N2O4-1000psia-eps40 | MMH/N2O4 | 2.0 | ~1000 psia | 40 | ~338.6 s |
+| REG-UDMH-N2O4 | UDMH/N2O4 | 2.6 | ~1000 psia | 40 | ~338.3 s |
+| REG-A50-N2O4 | A50/N2O4 | 2.0 | ~1000 psia | 40 | ~340.9 s |
+| REG-ETHANOL-LOX | Ethanol/LOX | 1.5 | ~1000 psia | 40 | ~336.8 s |
+
+Also bit-level checked against raw `CEA_Obj.get_Isp` for RP-1/LOX, CH4/LOX, MMH/N2O4 sample points.
+
+---
+
+## 5. Validation layers (automated)
+
+| Layer | Content | Tests |
+|-------|---------|-------|
+| **A** | RocketCEA docs goldens | `test_validation_suite` + physics bit-level |
+| **B** | Multi-propellant regression | `test_validation_suite` |
+| **C** | Physics invariants (T, γ, frozen/shifting) | physics + validation suite |
+| **D** | Trends (ranking, ε↑, O/F peak, ambient) | `test_validation_suite` |
+| **E** | Unit-leak guards | validation + physics |
+| **F** | Cantera γ band | `test_cross_validation` / known_values |
+| **G** | Density-Isp ordering | `test_validation_suite` |
+| **H** | SI identities (ve, Cf, ρ) | `test_physics_identities` |
+
+---
+
+## 6. Bugs fixed in physics audit (2026-07-29)
+
+| Issue | Fix |
+|-------|-----|
+| `gamma_and_temp_at_eps` returned exit T twice as “chamber T” | Now returns true chamber and exit temperatures from CEA |
+| Silent risk of ve/Cf drift | Hard identity tests + runtime `sanity_check` |
+| Validation catalog under-cited | Expanded primary sources (NASA RP-1311, RocketCEA docs, BIPM g0, SI bar) |
+
+---
+
+## 7. Known gaps (honesty)
+
+| Gap | Status |
+|-----|--------|
+| Page-cited Sutton edition tables | Not transcribed without physical edition |
+| Independent NASA CEARUN `.out` archives in-repo | Recommended future work; current goldens are RocketCEA/CEA bit-level |
+| Cantera species set ≠ full CEA | Documented; 15–25% γ band investigation threshold |
+| Flight engine efficiency models | Optional η only; not validated as engine performance |
+
+---
+
+## 8. How to re-audit after dependency upgrades
+
+1. Run full suite: `pytest -q`  
+2. Re-run bit-level block: `pytest tests/test_physics_identities.py -v`  
+3. If RocketCEA changes thermo data, update `validation_catalog.json` **with measured new values + changelog note** — never widen tolerances silently.  
+4. Confirm `G0 == 9.80665` and bar = 1e5 Pa still hold in `propwrap.units`.

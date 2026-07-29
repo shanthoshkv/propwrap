@@ -29,6 +29,8 @@ class PropellantRecord(BaseModel):
     is_blend: bool = False
     blend_components: dict[str, float] | None = None  # name → wt%
     cea_name: str | None = None  # RocketCEA identifier if different from name
+    # Typical O/F when this species is the FUEL with a common oxidizer (student hint)
+    typical_of_range: tuple[float, float] | None = None
     source: str = "built-in"
 
 
@@ -57,6 +59,7 @@ def _seed() -> None:
             default_temp_k=298.15,
             storage="storable",
             notes="Refined kerosene rocket propellant",
+            typical_of_range=(2.0, 2.8),
             source="RocketCEA built-in / handbook density",
         ),
         PropellantRecord(
@@ -68,6 +71,8 @@ def _seed() -> None:
             density_kg_m3=70.8,
             default_temp_k=20.4,
             storage="cryogenic",
+            typical_of_range=(4.5, 6.5),
+            notes="With LOX; peak Isp often near O/F≈5",
             source="RocketCEA built-in / NBP density",
         ),
         PropellantRecord(
@@ -79,6 +84,7 @@ def _seed() -> None:
             density_kg_m3=422.0,
             default_temp_k=111.6,
             storage="cryogenic",
+            typical_of_range=(2.5, 3.6),
             source="RocketCEA built-in / NBP density",
         ),
         PropellantRecord(
@@ -91,6 +97,7 @@ def _seed() -> None:
             default_temp_k=298.15,
             storage="storable",
             hypergolic_with=["N2O4", "IRFNA"],
+            typical_of_range=(1.5, 2.5),
             source="RocketCEA built-in",
         ),
         PropellantRecord(
@@ -103,6 +110,7 @@ def _seed() -> None:
             default_temp_k=298.15,
             storage="storable",
             hypergolic_with=["N2O4", "IRFNA"],
+            typical_of_range=(1.8, 2.8),
             source="RocketCEA built-in",
         ),
         PropellantRecord(
@@ -117,6 +125,7 @@ def _seed() -> None:
             blend_components={"UDMH": 50.0, "N2H4": 50.0},
             hypergolic_with=["N2O4"],
             notes="Aerozine-50",
+            typical_of_range=(1.5, 2.5),
             source="RocketCEA built-in blend",
         ),
         PropellantRecord(
@@ -128,6 +137,7 @@ def _seed() -> None:
             density_kg_m3=789.0,
             default_temp_k=298.15,
             storage="storable",
+            typical_of_range=(1.2, 2.0),
             source="RocketCEA built-in",
         ),
         PropellantRecord(
@@ -137,6 +147,7 @@ def _seed() -> None:
             density_kg_m3=760.0,
             default_temp_k=298.15,
             storage="storable",
+            typical_of_range=(2.0, 2.8),
             source="RocketCEA built-in",
         ),
         PropellantRecord(
@@ -146,6 +157,7 @@ def _seed() -> None:
             density_kg_m3=810.0,
             default_temp_k=298.15,
             storage="storable",
+            typical_of_range=(2.0, 2.8),
             source="RocketCEA built-in",
         ),
         PropellantRecord(
@@ -155,6 +167,7 @@ def _seed() -> None:
             density_kg_m3=940.0,
             default_temp_k=298.15,
             storage="storable",
+            typical_of_range=(2.0, 2.8),
             source="RocketCEA built-in",
         ),
     ]

@@ -539,7 +539,8 @@ class Mixture:
         return out
 
     def engine_case(self, of_ratio: float, pc_bar: float, eps: float, **kwargs: Any) -> MixtureStudy:
-        return self.study(of=of_ratio, pc=pc_bar, eps=eps, **kwargs)
+        """Legacy: second argument is chamber pressure in **bar**."""
+        return self.study(of=of_ratio, pc_bar=pc_bar, eps=eps, **kwargs)
 
     def ambient_performance(
         self,

@@ -411,17 +411,19 @@ def gamma_and_temp_at_eps(
     fuel_temp_k: float | None = None,
     ox_temp_k: float | None = None,
 ) -> tuple[float, float, float]:
-    prof = nozzle_profile(
-        fuel,
-        oxidizer,
-        of_ratio,
-        pc_pa,
-        [eps],
-        frozen=frozen,
-        fuel_temp_k=fuel_temp_k,
-        ox_temp_k=ox_temp_k,
+    """Return ``(gamma_exit, T_exit_K, T_chamber_K)`` at one area ratio."""
+    ft, ot, _ = resolve_temps(fuel, oxidizer, fuel_temp_k, ox_temp_k)
+    cea = _make_cea_obj(fuel, oxidizer, ft, ot)
+    pc = _pc_psia(pc_pa)
+    frz = 1 if frozen else 0
+    e = max(float(eps), 1.0001)
+    temps_r = cea.get_Temperatures(
+        Pc=pc, MR=of_ratio, eps=e, frozen=frz, frozenAtThroat=0
     )
-    return prof.gamma_cea[0], prof.temperatures_k[0], prof.temperatures_k[0]
+    _mw, gam = cea.get_exit_MolWt_gamma(Pc=pc, MR=of_ratio, eps=e)
+    tc_k = rankine_to_kelvin(temps_r[0])
+    te_k = rankine_to_kelvin(temps_r[2])
+    return float(gam), float(te_k), float(tc_k)
 
 
 def chamber_state(

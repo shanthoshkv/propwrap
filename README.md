@@ -11,17 +11,38 @@
 
 ---
 
-## Start here if you are new
+## Project website
 
-**[docs/how_to_use.md](docs/how_to_use.md)** — long, plain-language tutorial written for Python beginners:
+**[website/index.html](website/index.html)** — detailed technical site (overview, motivation, architecture, SI units, validation).  
+Open the file in a browser, or serve the folder:
 
-- install step by step  
-- what O/F, Pc, ε, Isp mean  
-- copy-paste first script  
-- recipes (trades, methane, blends, CLI)  
-- common mistakes and troubleshooting  
+```bash
+# from repo root
+python -m http.server 8080 --directory website
+# then visit http://localhost:8080
+```
 
-If you only open one doc after this README, open that.
+For GitHub Pages, point Pages at the `/website` folder (or copy `website/` to `docs/` if you prefer the docs branch layout).
+
+---
+
+## Students & coursework
+
+| Start here | Link |
+|------------|------|
+| **Install (lab PCs)** | [docs/INSTALL.md](docs/INSTALL.md) |
+| **How to use (beginner)** | [docs/how_to_use.md](docs/how_to_use.md) |
+| **Learning path** | [docs/learning/](docs/learning/) |
+| **1-page cheat sheet** | [docs/cheat_sheet.md](docs/cheat_sheet.md) |
+| **Sample lab assignment** | [docs/lab_assignment.md](docs/lab_assignment.md) |
+| **Generate lab pack** | `propwrap homework kerolox --name YourName` |
+
+```bash
+propwrap homework kerolox --name YourName
+# → summary.md, assumptions.txt, CSV tables, PNG figures
+```
+
+Presets: `Case.student_lab()`, `Case.booster()`, `Case.upper_stage()`.
 
 ---
 
@@ -101,29 +122,35 @@ You (script, CLI, or sibling tool)
 
 **Requirements:** Python **3.10+** (3.11/3.12 recommended), Windows / Linux / macOS.
 
+### From PyPI (recommended)
+
 ```bash
-git clone https://github.com/shanthoshkv/propwrap.git
-cd propwrap
-
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS / Linux
-source .venv/bin/activate
+# Windows:  .venv\Scripts\activate
+# macOS / Linux: source .venv/bin/activate
 
-pip install -e ".[dev]"
+pip install propwrap
 ```
 
-Dependencies (pulled in automatically): `rocketcea`, `cantera`, `pydantic>=2`, `matplotlib`, `numpy`.
-
-**Check:**
+Required dependencies (installed automatically): **rocketcea**, **cantera**, **pydantic≥2**, **matplotlib**, **numpy**.
 
 ```bash
 propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+```
+
+### From source (development)
+
+```bash
+git clone https://github.com/shanthoshkv/propwrap.git
+cd propwrap
+python -m venv .venv
+# Windows:  .venv\Scripts\activate
+# macOS / Linux: source .venv/bin/activate
+pip install -e ".[dev]"
 pytest -q
 ```
 
-Full walkthrough: **[docs/how_to_use.md](docs/how_to_use.md)**.
+Full walkthrough: **[docs/how_to_use.md](docs/how_to_use.md)** · Lab install notes: **[docs/INSTALL.md](docs/INSTALL.md)**.
 
 ---
 
@@ -249,14 +276,21 @@ Module reference: [`src/propwrap/units.py`](src/propwrap/units.py).
 
 | Asset | Description |
 |-------|-------------|
-| **[docs/validation.md](docs/validation.md)** | Methods, sources, limitations |
-| **[tests/data/validation_catalog.json](tests/data/validation_catalog.json)** | Golden / regression anchors |
-| **[tests/test_validation_suite.py](tests/test_validation_suite.py)** | Executable suite |
+| **[docs/validation.md](docs/validation.md)** | Full report: NASA RP-1311, RocketCEA goldens, SI identities |
+| **[tests/data/validation_catalog.json](tests/data/validation_catalog.json)** | Machine-readable anchors + primary sources |
+| **[tests/test_physics_identities.py](tests/test_physics_identities.py)** | Hard physics: \(v_e=I_{sp}g_0\), \(C_f=v_e/c^*\), CEA bit-level match |
+| **[tests/test_validation_suite.py](tests/test_validation_suite.py)** | Catalog-driven multi-propellant suite |
 
-Layers include: RocketCEA documentation goldens (LOX/LH₂), multi-propellant regression, physics invariants, trend checks, unit-leak guards, Cantera γ bands.
+**Secured against:**
+
+- NASA CEA methodology (RP-1311) via RocketCEA  
+- RocketCEA published LOX/LH₂ Isp table (readthedocs QuickStart) — machine-precision match  
+- BIPM standard \(g_0 = 9.80665\,\mathrm{m/s^2}\)  
+- SI bar = \(10^5\) Pa exactly  
+- Multi-pair regression + ideal-gas chamber density check  
 
 ```bash
-pytest tests/test_validation_suite.py -v
+pytest tests/test_physics_identities.py tests/test_validation_suite.py -v
 pytest -q
 ```
 
@@ -327,13 +361,29 @@ python examples/lox_ch4_case.py
 
 ---
 
+## Stable API (0.1.x)
+
+Treat these as stable across 0.1.x patch releases:
+
+| Surface | Examples |
+|---------|----------|
+| Core | `Mixture`, `Propellant`, `evaluate`, `scan_of`, `pc_bar` / `pc_mpa` / `pc` |
+| Workflows | `compare_propellants`, `characterize`, `define_blend`, `density_isp_curve` |
+| Units | `convert`, `propwrap.units` |
+| Results | `PerformanceResult` fields in [docs/api_reference.md](docs/api_reference.md) |
+| CLI | `propwrap run`, `homework`, `scan-of`, `characterize`, `compare-pairs` |
+
+May still change: Cantera cross-check details, plot styling, η efficiency knobs, cache internals. See [CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## Limitations
 
 1. **Ideal 1-D CEA** — not kinetics, multiphase losses, or flight performance.  
 2. **Shifting vs frozen** — reality is between the two.  
 3. **Theoretical ≠ delivered** — optional `efficiency=(ηc*, ηCf)` is rough only.  
 4. **Custom cards** — validated for structure, not thermodynamic realism.  
-5. **Cantera γ** — approximate major-species frozen compare.  
+5. **Cantera γ** — approximate major-species frozen compare (Cantera is a required dependency).  
 6. **RocketCEA** is GPL-family; this repo’s own code is MIT — review licenses for proprietary products.  
 7. **Not flight-certified.**
 
@@ -344,7 +394,13 @@ python examples/lox_ch4_case.py
 ```bash
 pip install -e ".[dev]"
 pytest -q
+python -m build          # sdist + wheel → dist/
+twine check dist/*
 ```
+
+CI runs on Ubuntu and Windows for Python 3.10–3.12 (see `.github/workflows/ci.yml`).
+
+Release steps: [docs/RELEASING.md](docs/RELEASING.md).
 
 ---
 
@@ -359,4 +415,4 @@ pytest -q
 ## License
 
 MIT for propwrap source — see [LICENSE](LICENSE).  
-Third-party packages keep their own licenses.
+**RocketCEA** (GPL-family) and other third-party packages keep their own licenses. Installing this stack is not “all MIT.”

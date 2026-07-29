@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>propwrap — Liquid Propellant Thermochemistry</title>
+  <meta name="description" content="SI-native Python library for liquid bipropellant thermochemistry on NASA CEA. Mixture performance, fair trades, density impulse, validation tests."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --void:    #02020a;
+      --deep:    #05050f;
+      --surface: #0a0a18;
+      --panel:   #0f0f1e;
+      --raise:   #141428;
+      --border:  rgba(255,255,255,0.06);
+      --border2: rgba(255,255,255,0.11);
+      --border3: rgba(255,255,255,0.18);
+
+      --fire:    #ff6b1a;
+      --fire2:   #ff9a56;
+      --fire-dim:rgba(255,107,26,0.08);
+      --fire-glow:rgba(255,107,26,0.22);
+
+      --ice:     #a8d8ff;
+      --ice2:    #d0eaff;
+      --ice-dim: rgba(168,216,255,0.07);
+
+      --ok:      #57c49e;
+      --ok-dim:  rgba(87,196,158,0.12);
+
+      --white:  #f4f6ff;
+      --off:    #c2c8e0;
+      --muted:  #6e7592;
+      --dim:    #3a3f58;
+
+      --font-head: 'Bebas Neue', 'Impact', sans-serif;
+      --font-ui:   'Syne', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+      --r: 8px; --r2: 14px; --r3: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-ui);
+      background: var(--void);
+      color: var(--off);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width:3px; }
+    ::-webkit-scrollbar-track { background:var(--void); }
+    ::-webkit-scrollbar-thumb { background:var(--dim); border-radius:2px; }
+    a { color: var(--fire2); text-decoration: none; }
+    a:hover { color: var(--fire); }
+
+    /* ─── NAV ─── */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:200;
+      height:56px;
+      background:rgba(2,2,10,0.85); backdrop-filter:blur(24px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-inner {
+      max-width:1280px; margin:0 auto; padding:0 40px; height:100%;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .nav-logo {
+      font-family: var(--font-head); font-size:1.35rem; letter-spacing:0.12em;
+      color:var(--white); text-decoration:none;
+    }
+    .nav-logo span { color:var(--fire); }
+    .nav-badge {
+      font-family:var(--font-mono); font-size:0.58rem; letter-spacing:0.1em;
+      background:rgba(255,107,26,0.15); border:1px solid rgba(255,107,26,0.3);
+      color:var(--fire2); padding:2px 7px; border-radius:3px; margin-left:10px;
+      text-transform:uppercase; vertical-align:middle;
+    }
+    .nav-links { display:flex; gap:26px; list-style:none; align-items:center; }
+    .nav-links a {
+      font-size:0.72rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+      color:var(--muted); text-decoration:none; transition:color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.on { color:var(--white); }
+    .nav-cta {
+      font-family:var(--font-mono); font-size:0.68rem; font-weight:500;
+      letter-spacing:0.06em; text-transform:uppercase;
+      padding:8px 18px; border-radius:var(--r);
+      background:var(--fire); color:#fff; border:none; cursor:pointer;
+      text-decoration:none; transition:all 0.2s;
+      box-shadow:0 0 20px rgba(255,107,26,0.3);
+    }
+    .nav-cta:hover { background:#ff7e35; box-shadow:0 0 32px rgba(255,107,26,0.5); color:#fff; }
+    .mobile-menu { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; background:none; border:none; }
+    .mobile-menu span { width:22px; height:2px; background:var(--white); border-radius:1px; display:block; transition:all 0.3s; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height:100vh;
+      padding:120px 40px 90px;
+      position:relative; overflow:hidden;
+      display:flex; align-items:center;
+      background:var(--void);
+    }
+    .hero-stars {
+      position:absolute; inset:0; pointer-events:none; z-index:0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 40% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 20%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 85% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 92% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 90%, rgba(255,255,255,0.2) 0%, transparent 100%);
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0; z-index:0;
+      background-image:
+        linear-gradient(rgba(255,107,26,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,107,26,0.025) 1px, transparent 1px);
+      background-size:64px 64px;
+      mask-image:radial-gradient(ellipse 90% 80% at 50% 40%, black 0%, transparent 70%);
+      animation:gridPulse 10s ease-in-out infinite;
+    }
+    @keyframes gridPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    .hero::after {
+      content:''; position:absolute; right:-10%; top:10%;
+      width:60%; height:80%; z-index:0;
+      background:radial-gradient(ellipse at 70% 40%, rgba(255,107,26,0.09) 0%, transparent 65%);
+      animation:floatGlow 12s ease-in-out infinite;
+    }
+    @keyframes floatGlow { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-30px) scale(1.05);} }
+
+    .hero-inner {
+      max-width:1280px; margin:0 auto; width:100%;
+      display:grid; grid-template-columns:1.1fr 0.9fr; gap:70px; align-items:center;
+      position:relative; z-index:2;
+    }
+    .hero-eyebrow {
+      font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase;
+      color:var(--fire); margin-bottom:22px;
+      display:flex; align-items:center; gap:14px;
+    }
+    .hero-eyebrow::before { content:''; width:32px; height:1px; background:var(--fire); flex-shrink:0; }
+    .pulse {
+      width:7px; height:7px; border-radius:50%;
+      background:var(--fire2); box-shadow:0 0 10px var(--fire2);
+      animation:pulse 2s ease-in-out infinite; display:inline-block;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(0.8);} }
+
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(3rem, 6.5vw, 5.4rem);
+      font-weight:400; line-height:0.95; letter-spacing:0.04em;
+      color:var(--white); margin-bottom:24px;
+    }
+    .hero h1 .fire-word { color:var(--fire); }
+    .hero h1 .ice-word  { color:var(--ice); }
+    .hero-sub {
+      font-size:1.0rem; color:var(--muted); line-height:1.85;
+      max-width:520px; margin-bottom:28px; font-weight:400;
+    }
+    .hero-sub strong { color:var(--off); font-weight:600; }
+    .hero-pills { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:32px; }
+    .pill {
+      font-family:var(--font-mono); font-size:0.63rem; letter-spacing:0.04em;
+      padding:5px 11px; border-radius:4px;
+      border:1px solid var(--border2); color:var(--muted); background:var(--surface);
+      transition:all 0.2s;
+    }
+    .pill:hover { border-color:var(--fire); color:var(--fire2); }
+
+    .hero-cta { display:flex; gap:12px; flex-wrap:wrap; }
+    .btn {
+      font-family:var(--font-mono); font-size:0.72rem; font-weight:500;
+      letter-spacing:0.08em; text-transform:uppercase;
+      padding:13px 28px; border-radius:var(--r);
+      text-decoration:none; border:none; cursor:pointer; transition:all 0.2s; display:inline-block;
+    }
+    .btn-fire { background:var(--fire); color:#fff; box-shadow:0 0 30px rgba(255,107,26,0.3); }
+    .btn-fire:hover { background:#ff7e35; box-shadow:0 0 50px rgba(255,107,26,0.5); transform:translateY(-1px); color:#fff; }
+    .btn-ghost { background:transparent; color:var(--off); border:1px solid var(--border2); }
+    .btn-ghost:hover { border-color:var(--fire); color:var(--fire2); }
+
+    /* terminal */
+    .terminal {
+      background:var(--surface); border:1px solid var(--border2);
+      border-radius:var(--r2); overflow:hidden;
+      box-shadow:0 0 80px rgba(255,107,26,0.06), 0 40px 80px rgba(0,0,0,0.6);
+    }
+    .term-bar {
+      padding:12px 18px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:7px;
+      background:var(--panel);
+    }
+    .tdot { width:11px; height:11px; border-radius:50%; }
+    .td-r{background:#ff5f57;} .td-a{background:#febc2e;} .td-g{background:#28c840;}
+    .term-name { font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); margin-left:6px; letter-spacing:0.05em; }
+    .term-body { padding:22px 24px; font-family:var(--font-mono); font-size:0.73rem; line-height:1.95; }
+    .tp  { color:var(--ok); }
+    .tc  { color:var(--white); }
+    .tco { color:var(--dim); }
+    .to  { color:var(--muted); padding-left:14px; }
+    .tv  { color:var(--fire2); }
+    .tok { color:var(--ok); }
+    .tw  { color:#c9a96e; }
+    .tic { color:var(--ice); }
+    .cursor {
+      display:inline-block; width:7px; height:13px;
+      background:var(--fire2); vertical-align:middle;
+      animation:cur 1.1s step-end infinite;
+    }
+    @keyframes cur { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+    /* ─── SHARED ─── */
+    .divider {
+      height:1px;
+      background:linear-gradient(90deg, transparent, var(--border2) 30%, var(--border2) 70%, transparent);
+      position:relative;
+    }
+    .divider::after {
+      content:''; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:5px; height:5px; border-radius:50%;
+      background:var(--fire); box-shadow:0 0 10px var(--fire);
+    }
+
+    .section { padding:100px 40px; }
+    .s-void { background:var(--void); }
+    .s-deep { background:var(--deep); }
+    .s-surface { background:var(--surface); }
+    .section-inner { max-width:1280px; margin:0 auto; }
+
+    .sh { margin-bottom:52px; }
+    .sh-label {
+      font-family:var(--font-mono); font-size:0.63rem; letter-spacing:0.2em; text-transform:uppercase;
+      color:var(--fire); margin-bottom:16px; display:flex; align-items:center; gap:10px;
+    }
+    .sh-label::before { content:''; width:20px; height:1px; background:var(--fire); }
+    .sh h2 {
+      font-family:var(--font-head);
+      font-size:clamp(2.2rem, 4vw, 3.5rem);
+      font-weight:400; letter-spacing:0.06em; color:var(--white); line-height:1.0; margin-bottom:16px;
+    }
+    .sh h2 em { font-style:normal; color:var(--fire); }
+    .sh h2 .ice { color:var(--ice); }
+    .sh p { font-size:0.94rem; color:var(--muted); max-width:600px; line-height:1.8; font-weight:400; }
+    .sh p strong { color: var(--off); }
+
+    /* stats */
+    .stats-row {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:1px; background:var(--border);
+      border:1px solid var(--border); border-radius:var(--r2); overflow:hidden;
+    }
+    .stat-item { background:var(--panel); padding:36px 24px; text-align:center; transition:background 0.2s; }
+    .stat-item:hover { background:var(--raise); }
+    .stat-num {
+      font-family:var(--font-head); font-size:2.6rem; letter-spacing:0.06em;
+      color:var(--white); line-height:1; margin-bottom:6px;
+    }
+    .stat-num span { color:var(--fire); font-size:1.3rem; }
+    .stat-label { font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+
+    /* two col */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start; }
+    .text-block h3 { font-family:var(--font-head); font-size:1.7rem; letter-spacing:0.06em; color:var(--white); margin-bottom:14px; line-height:1.1; }
+    .text-block h3 span { color:var(--fire); }
+    .text-block p { font-size:0.88rem; color:var(--muted); line-height:1.85; margin-bottom:14px; }
+    .text-block p strong { color:var(--off); }
+    .text-block ul { margin: 0 0 14px 1.1rem; color: var(--muted); font-size: 0.88rem; }
+    .text-block li { margin-bottom: 0.4rem; line-height: 1.7; }
+    .text-block li strong { color: var(--off); }
+
+    .eq-block {
+      background:var(--panel); border:1px solid var(--border2); border-radius:var(--r);
+      padding:14px 18px; margin-bottom:10px;
+      font-family:var(--font-mono); font-size:0.78rem; color:var(--ice2); line-height:1.8;
+    }
+    .eq-label { font-size:0.6rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px; display:block; }
+
+    /* cards */
+    .card-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--r2); overflow:hidden; }
+    .card-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--r2); overflow:hidden; }
+    .card-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--r2); overflow:hidden; }
+
+    .big-card { background:var(--panel); padding:32px 26px; transition:background 0.22s; }
+    .big-card:hover { background:var(--raise); }
+    .card-tag { font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--fire); margin-bottom:12px; display:block; }
+    .big-card h3 { font-family:var(--font-head); font-size:1.25rem; letter-spacing:0.05em; color:var(--white); margin-bottom:10px; line-height:1.15; }
+    .big-card h3 em { font-style:normal; color:var(--fire2); }
+    .big-card p { font-size:0.81rem; color:var(--muted); line-height:1.75; margin-bottom:12px; }
+    .card-icon { font-size:1.5rem; margin-bottom:12px; display:block; }
+
+    .kv-list { list-style:none; }
+    .kv-list li {
+      font-size:0.76rem; color:var(--muted); padding:8px 0;
+      border-bottom:1px solid var(--border);
+      display:flex; gap:10px; align-items:baseline;
+    }
+    .kv-list li:last-child { border-bottom:none; }
+    .kv-list li strong { color:var(--off); min-width:110px; flex-shrink:0; }
+    .kv-list li .val { color:var(--ice); font-family: var(--font-mono); font-size: 0.72rem; }
+
+    .status {
+      display:inline-block; font-family:var(--font-mono); font-size:0.58rem;
+      letter-spacing:0.08em; text-transform:uppercase;
+      padding:3px 8px; border-radius:3px; margin-top:8px;
+    }
+    .s-live { background:var(--ok-dim); border:1px solid rgba(87,196,158,0.3); color:var(--ok); }
+    .s-wip  { background:rgba(255,107,26,0.12); border:1px solid rgba(255,107,26,0.3); color:var(--fire2); }
+    .s-plan { background:var(--ice-dim); border:1px solid rgba(168,216,255,0.2); color:var(--ice); }
+
+    /* pipeline */
+    .pipe-box { background:var(--panel); border:1px solid var(--border2); border-radius:var(--r2); overflow:hidden; }
+    .pipe-hdr {
+      padding:18px 28px; border-bottom:1px solid var(--border);
+      font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.14em; text-transform:uppercase;
+      color:var(--muted); display:flex; align-items:center; gap:10px;
+    }
+    .pipe-hdr::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--fire); box-shadow:0 0 6px var(--fire); flex-shrink:0; }
+    .pipe-grid { display:grid; grid-template-columns:repeat(5,1fr); }
+    .pipe-step {
+      padding:28px 14px 24px; border-right:1px solid var(--border); text-align:center;
+      transition:background 0.2s; position:relative;
+    }
+    .pipe-step:last-child { border-right:none; }
+    .pipe-step:hover { background:var(--fire-dim); }
+    .pipe-num { font-family:var(--font-mono); font-size:0.58rem; letter-spacing:0.12em; color:var(--fire); margin-bottom:12px; display:block; }
+    .pipe-icon { font-size:1.35rem; margin-bottom:10px; display:block; }
+    .pipe-step h4 { font-family:var(--font-mono); font-size:0.68rem; font-weight:500; color:var(--white); margin-bottom:7px; }
+    .pipe-step p { font-size:0.68rem; color:var(--muted); line-height:1.55; }
+
+    /* table */
+    .data-table {
+      width:100%; border-collapse:collapse;
+      font-size:0.84rem;
+      border:1px solid var(--border); border-radius:var(--r2); overflow:hidden;
+    }
+    .data-table th {
+      font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--muted); text-align:left; padding:14px 18px;
+      background:var(--panel); border-bottom:1px solid var(--border);
+      font-weight:500;
+    }
+    .data-table td {
+      padding:13px 18px; border-bottom:1px solid var(--border);
+      color:var(--muted); background:var(--surface); vertical-align:top;
+    }
+    .data-table tr:last-child td { border-bottom:none; }
+    .data-table td strong { color: var(--off); font-weight: 600; }
+    .data-table .mono { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ice); }
+
+    .note {
+      border-left: 3px solid var(--fire);
+      background: var(--fire-dim);
+      padding: 16px 20px;
+      margin: 24px 0 0;
+      border-radius: 0 var(--r) var(--r) 0;
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+    .note.warn { border-left-color: #c9a96e; background: rgba(201,169,110,0.08); }
+    .note strong { color: var(--off); }
+
+    .code-block {
+      background:var(--panel); border:1px solid var(--border2); border-radius:var(--r2);
+      overflow:hidden; margin-top: 20px;
+    }
+    .code-block pre {
+      margin:0; padding:22px 24px;
+      font-family:var(--font-mono); font-size:0.74rem; line-height:1.9;
+      color:var(--muted); overflow-x:auto; white-space:pre;
+    }
+
+    /* footer */
+    .footer-band {
+      border-top:1px solid var(--border);
+      padding:40px;
+      max-width:1280px; margin:0 auto;
+      display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px;
+      align-items:flex-start;
+    }
+    .footer-logo { font-family:var(--font-head); font-size:1.15rem; letter-spacing:0.12em; color:var(--dim); }
+    .footer-logo span { color:var(--fire); }
+    .footer-nav { display:flex; gap:24px; list-style:none; flex-wrap:wrap; }
+    .footer-nav a { font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--dim); text-decoration:none; }
+    .footer-nav a:hover { color:var(--muted); }
+    .footer-copy { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); line-height:1.7; max-width:360px; }
+
+    /* mobile nav panel */
+    .nav-drawer {
+      display:none; position:fixed; top:56px; left:0; right:0; z-index:190;
+      background:rgba(2,2,10,0.97); border-bottom:1px solid var(--border);
+      padding:20px 24px 28px; flex-direction:column; gap:16px;
+    }
+    .nav-drawer.open { display:flex; }
+    .nav-drawer a {
+      font-size:0.8rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+      color:var(--off); text-decoration:none;
+    }
+
+    /* responsive */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns:1fr; gap:48px; }
+      .pipe-grid { grid-template-columns:1fr 1fr; }
+      .pipe-step { border-bottom:1px solid var(--border); }
+      .two-col { grid-template-columns:1fr; gap:36px; }
+      .card-grid-3, .card-grid-4 { grid-template-columns:1fr 1fr; }
+      .stats-row { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width: 720px) {
+      .nav-links, .nav-cta { display:none; }
+      .mobile-menu { display:flex; }
+      .nav-inner, .section, .hero { padding-left:20px; padding-right:20px; }
+      .section { padding-top:70px; padding-bottom:70px; }
+      .hero { padding-top:100px; min-height:auto; }
+      .card-grid-3, .card-grid-4, .card-grid-2 { grid-template-columns:1fr; }
+      .pipe-grid { grid-template-columns:1fr; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .footer-band { padding:32px 20px; flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#top">PROP<span>WRAP</span><span class="nav-badge">v0.1</span></a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#why">Why</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#physics">Physics</a></li>
+      <li><a href="#validation">Validation</a></li>
+      <li><a href="#students">Students</a></li>
+      <li><a href="#start">Start</a></li>
+    </ul>
+    <a class="nav-cta" href="https://github.com/shanthoshkv/propwrap" target="_blank" rel="noopener">GitHub →</a>
+    <button class="mobile-menu" id="menuBtn" aria-label="Menu" type="button">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <a href="#about">About</a>
+  <a href="#why">Why</a>
+  <a href="#features">Features</a>
+  <a href="#physics">Physics</a>
+  <a href="#validation">Validation</a>
+  <a href="#students">Students</a>
+  <a href="#start">Start</a>
+  <a href="https://github.com/shanthoshkv/propwrap" target="_blank" rel="noopener">GitHub</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-stars"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow"><span class="pulse"></span> Liquid bipropellant · NASA CEA · SI-first</div>
+      <h1>
+        PROP<span class="fire-word">WRAP</span><br/>
+        <span class="ice-word">THERMOCHEMISTRY</span><br/>
+        WITHOUT THE UNIT MESS
+      </h1>
+      <p class="hero-sub">
+        A Python library over <strong>NASA CEA</strong> (via RocketCEA) for mixture performance,
+        O/F sweeps, density impulse, and fair multi-propellant trades.
+        Typed results. Mostly SI. Numbers you can re-run next semester.
+      </p>
+      <div class="hero-pills">
+        <span class="pill">LOX / RP-1 · CH₄ · LH₂</span>
+        <span class="pill">N₂O₄ / MMH · UDMH</span>
+        <span class="pill">Shifting + Frozen</span>
+        <span class="pill">ρ · Isp Trades</span>
+        <span class="pill">SI · Pa · K · m/s</span>
+        <span class="pill">MIT License</span>
+      </div>
+      <div class="hero-cta">
+        <a class="btn btn-fire" href="#start">Get Started</a>
+        <a class="btn btn-ghost" href="#validation">See Validation</a>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="tdot td-r"></div>
+        <div class="tdot td-a"></div>
+        <div class="tdot td-g"></div>
+        <span class="term-name">propwrap · session.py</span>
+      </div>
+      <div class="term-body">
+        <div><span class="tp">$</span> <span class="tc">python</span></div>
+        <div><span class="tco"># theoretical vacuum point — not flight Isp</span></div>
+        <div><span class="tp">&gt;&gt;&gt;</span> <span class="tc">from propwrap import Mixture</span></div>
+        <div><span class="tp">&gt;&gt;&gt;</span> <span class="tc">r = Mixture(</span><span class="tv">"RP-1"</span><span class="tc">,</span> <span class="tv">"LOX"</span><span class="tc">).evaluate(</span></div>
+        <div class="to"><span class="tc">of=</span><span class="tv">2.56</span><span class="tc">, pc_bar=</span><span class="tv">70</span><span class="tc">, eps=</span><span class="tv">20</span><span class="tc">)</span></div>
+        <div><span class="tp">&gt;&gt;&gt;</span> <span class="tc">r.isp_vac_shifting, r.ve_vac_shifting, r.c_star</span></div>
+        <div><span class="tv">343.66 s</span> &nbsp; <span class="tok">3370 m/s</span> &nbsp; <span class="tic">1798 m/s</span></div>
+        <div><span class="tco"># Pc stored as 7e6 Pa · c* never left as ft/s</span></div>
+        <div><span class="tp">&gt;&gt;&gt;</span> <span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STATS -->
+<section class="section s-deep" style="padding-top:60px;padding-bottom:60px;">
+  <div class="section-inner">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-num">132<span>+</span></div>
+        <div class="stat-label">pytest cases</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">SI</div>
+        <div class="stat-label">Pa · K · m/s · kg/m³</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">CEA</div>
+        <div class="stat-label">NASA kernel via RocketCEA</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">BIT</div>
+        <div class="stat-label">match on published Isp goldens</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section class="section s-void" id="about">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Overview</div>
+      <h2>WHAT THIS <em>ACTUALLY</em> DOES</h2>
+      <p>
+        You name a fuel and oxidizer, set O/F, chamber pressure, and expansion ratio.
+        propwrap runs CEA and returns Isp, c*, temperatures, γ, densities — as typed objects
+        you can print, plot, or dump to CSV.
+      </p>
+    </div>
+
+    <div class="two-col">
+      <div class="text-block">
+        <h3>IN <span>SCOPE</span></h3>
+        <p>
+          Propellant thermochemistry only. Ideal shifting and frozen performance.
+          Sweeps over O/F, Pc, and ε. Density impulse. Fair multi-pair trades at each pair’s
+          own optimum. Blends, registry, SI converters, CLI, student lab packs.
+        </p>
+        <ul>
+          <li>Vacuum / sea-level Isp (shifting + frozen)</li>
+          <li>v<sub>e</sub>, c*, C<sub>f</sub>, T<sub>c</sub>/T<sub>t</sub>/T<sub>e</sub>, γ, M<sub>w</sub></li>
+          <li>ρ·Isp curves and rankings</li>
+          <li>Custom cards and multi-component wt% blends</li>
+        </ul>
+        <span class="status s-live">Library · Live</span>
+      </div>
+      <div class="text-block">
+        <h3>OUT OF <span>SCOPE</span></h3>
+        <p>
+          This is not a full engine code. No turbopumps, no cooling channels, no trajectory.
+          Those tools can sit on top and pull γ, c*, T, and Isp from one place.
+        </p>
+        <ul>
+          <li>Flight-delivered Isp as a “truth” mode</li>
+          <li>Injector CFD or finite-rate kinetics</li>
+          <li>Cycle analysis or vehicle sizing</li>
+          <li>Any certification or agency endorsement</li>
+        </ul>
+        <div class="note" style="margin-top:20px;">
+          <strong>Honest default:</strong> every number is ideal 1-D CEA theory.
+          Real engines run lower. The docs and homework output say that out loud.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- WHY -->
+<section class="section s-deep" id="why">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Motivation</div>
+      <h2>WHY <em>BUILD</em> THIS</h2>
+      <p>
+        CEA is fine. The mess around it is not — Rankine next to pascals, the same O/F forced
+        onto hydrogen and kerosene, string dumps scraped into nozzles six months later.
+      </p>
+    </div>
+
+    <div class="card-grid-2">
+      <div class="big-card">
+        <span class="card-icon">🧱</span>
+        <span class="card-tag">Library, not ritual</span>
+        <h3>ONE IMPORT · <em>PINNED</em> VERSION</h3>
+        <p>
+          Import it, pin a release, re-run the same case next semester.
+          No more “which notebook was the good one?”
+        </p>
+      </div>
+      <div class="big-card">
+        <span class="card-icon">📐</span>
+        <span class="card-tag">Units wall</span>
+        <h3>ENGLISH STOPS AT <em>CEA</em></h3>
+        <p>
+          RocketCEA still speaks psia and Rankine. propwrap converts once.
+          Outside that wall: Pa, K, m/s, kg/m³. Isp stays in seconds; v<sub>e</sub> is m/s.
+        </p>
+      </div>
+      <div class="big-card">
+        <span class="card-icon">⚖️</span>
+        <span class="card-tag">Fair trades</span>
+        <h3>EACH PAIR AT ITS <em>OWN</em> O/F</h3>
+        <p>
+          <code style="color:var(--ice);font-family:var(--font-mono);font-size:0.85em;">compare_propellants</code>
+          optimizes mixture ratio per pair before ranking.
+          Forcing O/F = 2.5 on LOX/LH₂ and LOX/RP-1 is wrong — and no longer the easy path.
+        </p>
+      </div>
+      <div class="big-card">
+        <span class="card-icon">✓</span>
+        <span class="card-tag">Trust from tests</span>
+        <h3>PHYSICS THAT <em>FAILS</em> LOUDLY</h3>
+        <p>
+          Bit-level Isp match to RocketCEA goldens. v<sub>e</sub> = I<sub>sp</sub>·g<sub>0</sub>.
+          C<sub>f</sub> = v<sub>e</sub>/c*. Written validation report that also lists what we refuse to claim.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES / PIPELINE -->
+<section class="section s-void" id="features">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Capabilities</div>
+      <h2>WHAT’S IN THE <em>REPO</em> TODAY</h2>
+      <p>
+        Point performance, sweeps, trades, density impulse, gas state, registry, SI converters,
+        CLI, and student homework tooling — all wired through one API.
+      </p>
+    </div>
+
+    <div class="pipe-box" style="margin-bottom:48px;">
+      <div class="pipe-hdr">Typical call path · evaluate → models → CEA → cache</div>
+      <div class="pipe-grid">
+        <div class="pipe-step">
+          <span class="pipe-num">01</span>
+          <span class="pipe-icon">🧪</span>
+          <h4>Mixture</h4>
+          <p>Fuel + ox name (or blend). Registry resolves aliases and densities.</p>
+        </div>
+        <div class="pipe-step">
+          <span class="pipe-num">02</span>
+          <span class="pipe-icon">⚙️</span>
+          <h4>Evaluate</h4>
+          <p>O/F, Pc (Pa / bar / MPa), ε. Optional η knock-downs.</p>
+        </div>
+        <div class="pipe-step">
+          <span class="pipe-num">03</span>
+          <span class="pipe-icon">🔥</span>
+          <h4>CEA backend</h4>
+          <p>RocketCEA call. English units stop here. SI comes out.</p>
+        </div>
+        <div class="pipe-step">
+          <span class="pipe-num">04</span>
+          <span class="pipe-icon">📦</span>
+          <h4>Pydantic result</h4>
+          <p>Typed fields, print-friendly, CSV / markdown export.</p>
+        </div>
+        <div class="pipe-step">
+          <span class="pipe-num">05</span>
+          <span class="pipe-icon">💾</span>
+          <h4>SQLite cache</h4>
+          <p>Same case again? Hit disk under ~/.propwrap/</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid-3">
+      <div class="big-card">
+        <span class="card-tag">Point · Sweep</span>
+        <h3>PERFORMANCE <em>CORE</em></h3>
+        <p>Vac/SL Isp, v<sub>e</sub>, c*, C<sub>f</sub>, temperatures, γ, M<sub>w</sub>, P<sub>e</sub>. O/F, Pc, ε scans with optimum().</p>
+        <span class="status s-live">Live</span>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Trades</span>
+        <h3>DENSITY <em>IMPULSE</em></h3>
+        <p>Bulk liquid density vs O/F. Rank pairs by Isp and ρ·Isp — the volume-limited stage cares about both.</p>
+        <span class="status s-live">Live</span>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Composition</span>
+        <h3>REGISTRY + <em>BLENDS</em></h3>
+        <p>Aliases (RP-1→RP1), cryo defaults, typical O/F hints, multi-component wt% fuels and oxidizers.</p>
+        <span class="status s-live">Live</span>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Gas state</span>
+        <h3>PRODUCT <em>PROPERTIES</em></h3>
+        <p>Chamber / throat / exit: T, P [Pa], ρ, γ, c<sub>p</sub>, μ, k, Pr, major species.</p>
+        <span class="status s-live">Live</span>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Units</span>
+        <h3>SI <em>CONVERTERS</em></h3>
+        <p><code style="color:var(--ice);font-family:var(--font-mono);font-size:0.85em;">convert(70,"bar","Pa")</code>, Isp↔v<sub>e</sub>, density helpers. pc_bar / pc_mpa / pc inputs.</p>
+        <span class="status s-live">Live</span>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Coursework</span>
+        <h3>STUDENT <em>TOOLING</em></h3>
+        <p>homework CLI, Case presets, markdown tables, captions, cheat sheet, sample lab assignment.</p>
+        <span class="status s-live">Live</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PHYSICS -->
+<section class="section s-deep" id="physics">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Physics &amp; units</div>
+      <h2>IDENTITIES WE <em>REFUSE</em> TO LET DRIFT</h2>
+      <p>
+        Locked in tests. Partly re-checked at evaluation time.
+        One real bug found on the physics pass: gamma_and_temp_at_eps used to return exit T twice.
+      </p>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="eq-block">
+          <span class="eq-label">Exhaust velocity</span>
+          v<sub>e</sub> = I<sub>sp</sub> · g<sub>0</sub> &nbsp;&nbsp; g<sub>0</sub> = 9.80665 m/s²
+        </div>
+        <div class="eq-block">
+          <span class="eq-label">Vacuum thrust coefficient</span>
+          C<sub>f,vac</sub> = v<sub>e</sub> / c*
+        </div>
+        <div class="eq-block">
+          <span class="eq-label">Pressure ratio</span>
+          P<sub>c</sub> / P<sub>e</sub> &nbsp; matches CEA Pc/Pe
+        </div>
+        <div class="eq-block">
+          <span class="eq-label">Chamber density check</span>
+          ρ ≈ P · M<sub>w</sub> / (R T)
+        </div>
+        <div class="eq-block">
+          <span class="eq-label">Temperature ordering</span>
+          T<sub>e</sub> &lt; T<sub>t</sub> &lt; T<sub>c</sub>
+        </div>
+      </div>
+      <div class="text-block">
+        <h3>PUBLIC <span>SI</span> FIELDS</h3>
+        <ul class="kv-list">
+          <li><strong>Pressure</strong> <span class="val">Pa · pc_pa, pe_pa · .pc_bar view</span></li>
+          <li><strong>Temperature</strong> <span class="val">K · tc_kelvin …</span></li>
+          <li><strong>Isp</strong> <span class="val">s · isp_vac_shifting</span></li>
+          <li><strong>Exhaust vel.</strong> <span class="val">m/s · ve_vac_shifting</span></li>
+          <li><strong>c*</strong> <span class="val">m/s · c_star</span></li>
+          <li><strong>Density</strong> <span class="val">kg/m³ · bulk_density_kg_m3</span></li>
+          <li><strong>ρ·Isp</strong> <span class="val">s·kg/m³ · density_impulse_*</span></li>
+        </ul>
+        <div class="note warn">
+          <strong>Pressure trap:</strong> <code style="color:var(--ice);font-family:var(--font-mono);">pc</code> means pascals.
+          Use <code style="color:var(--ice);font-family:var(--font-mono);">pc_bar=70</code> for homework.
+          Passing <code style="color:var(--ice);font-family:var(--font-mono);">pc=70</code> looks like vacuum and the library refuses it on purpose.
+        </div>
+        <div class="note" style="margin-top:12px;">
+          <strong>γ vs c<sub>p</sub>/c<sub>v</sub>:</strong> CEA performance γ is the isentropic exponent for nozzle relations.
+          Chamber transport c<sub>p</sub> can include dissociation. They need not match exactly — chemistry, not a unit bug.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- VALIDATION -->
+<section class="section s-void" id="validation">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Validation</div>
+      <h2>WHERE THE NUMBERS ARE <em>ANCHORED</em></h2>
+      <p>
+        Not “Isp looks about right.” Same inputs as CEA → same Isp. SI identities hold.
+        Gaps written down, not hand-waved.
+      </p>
+    </div>
+
+    <table class="data-table" style="margin-bottom:40px;">
+      <thead>
+        <tr><th>Source</th><th>What it secures</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>NASA RP-1311</strong> — Gordon &amp; McBride, CEA<br/><span class="mono">ntrs.nasa.gov · Parts I &amp; II</span></td>
+          <td>Equilibrium / frozen rocket performance methodology under RocketCEA</td>
+        </tr>
+        <tr>
+          <td><strong>RocketCEA QuickStart</strong> LOX/LH₂ table<br/><span class="mono">rocketcea.readthedocs.io</span></td>
+          <td>Published Isp; propwrap matches get_Isp at machine precision (O/F 2…8, Pc=100 psia, ε=40)</td>
+        </tr>
+        <tr>
+          <td><strong>g₀ = 9.80665 m/s²</strong> · CGPM / BIPM</td>
+          <td>v<sub>e</sub> and C<sub>f</sub> definitions</td>
+        </tr>
+        <tr>
+          <td><strong>1 bar = 10⁵ Pa</strong> exactly</td>
+          <td>pc_bar conversion</td>
+        </tr>
+        <tr>
+          <td><strong>Direct CEA_Obj checks</strong> · RP-1, CH₄, MMH</td>
+          <td>propwrap path ≡ raw RocketCEA for locked cases</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="two-col">
+      <div>
+        <h3 style="font-family:var(--font-head);font-size:1.5rem;letter-spacing:0.06em;color:var(--white);margin-bottom:16px;">LOX/LH₂ <span style="color:var(--fire);">GOLDENS</span></h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>O/F</th><th>Isp vac [s]</th><th>Role</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>default</td><td class="mono">374.30…</td><td>install smoke</td></tr>
+            <tr><td>2</td><td class="mono">424.36</td><td>fuel-rich</td></tr>
+            <tr><td>4</td><td class="mono">453.13</td><td></td></tr>
+            <tr><td>5</td><td class="mono">453.24</td><td>near peak</td></tr>
+            <tr><td>6</td><td class="mono">448.19</td><td></td></tr>
+            <tr><td>8</td><td class="mono">424.70</td><td>ox-rich</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="text-block">
+        <h3>ALSO <span>LOCKED</span></h3>
+        <p>
+          Regression matrix covers LOX/RP-1, LOX/CH₄, N₂O₄/MMH, UDMH, A-50, ethanol
+          at documented Pc/ε. Full write-up in
+          <a href="../docs/validation.md">docs/validation.md</a>
+          and <a href="../tests/data/validation_catalog.json">validation_catalog.json</a>.
+        </p>
+        <div class="note warn">
+          <strong>Not flight data.</strong> RS-25 ~452 s vacuum is delivered engine performance.
+          Pure CEA at similar conditions sits higher (~464 s in our RS-25-class case).
+          Merlin-class flight Isp is well below pure kerolox theory. The catalog marks that gap.
+        </div>
+        <div class="code-block" style="margin-top:20px;">
+          <div class="term-bar" style="border-radius:0;">
+            <div class="tdot td-r"></div><div class="tdot td-a"></div><div class="tdot td-g"></div>
+            <span class="term-name">pytest</span>
+          </div>
+          <pre><span class="tp">$</span> <span class="tc">pytest tests/test_physics_identities.py \</span>
+      <span class="tc">tests/test_validation_suite.py -v</span>
+<span class="tp">$</span> <span class="tc">pytest -q</span>
+<span class="tco"># 132+ passed on last full run</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STUDENTS -->
+<section class="section s-deep" id="students">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Coursework</div>
+      <h2>BUILT SO A LAB CAN <em>FINISH</em></h2>
+      <p>
+        Propulsion software often assumes you already know venvs and bar vs pascals.
+        Coursework usually doesn’t. So the repo includes the boring useful layer.
+      </p>
+    </div>
+
+    <div class="card-grid-2">
+      <div class="big-card">
+        <span class="card-icon">📚</span>
+        <span class="card-tag">Docs</span>
+        <h3>START <em>HERE</em></h3>
+        <ul class="kv-list">
+          <li><strong>Install</strong> <span class="val"><a href="../docs/INSTALL.md">INSTALL.md</a> · Windows / Mac lab PCs</span></li>
+          <li><strong>Walkthrough</strong> <span class="val"><a href="../docs/how_to_use.md">how_to_use.md</a></span></li>
+          <li><strong>Concepts</strong> <span class="val"><a href="../docs/learning/">learning/</a> · units, frozen/shifting, trades</span></li>
+          <li><strong>Cheat sheet</strong> <span class="val"><a href="../docs/cheat_sheet.md">cheat_sheet.md</a></span></li>
+          <li><strong>Sample lab</strong> <span class="val"><a href="../docs/lab_assignment.md">lab_assignment.md</a> + rubric</span></li>
+        </ul>
+      </div>
+      <div class="big-card">
+        <span class="card-icon">🧰</span>
+        <span class="card-tag">Tools</span>
+        <h3>HOMEWORK <em>PACK</em></h3>
+        <p style="margin-bottom:14px;">
+          One command builds a report folder: summary, assumptions, CSVs, O/F and density-Isp plots,
+          optional multi-pair trade figure.
+        </p>
+        <div class="eq-block" style="margin-bottom:14px;">
+          propwrap homework kerolox --name Ada
+        </div>
+        <ul class="kv-list">
+          <li><strong>Presets</strong> <span class="val">Case.student_lab() · booster() · upper_stage()</span></li>
+          <li><strong>Export</strong> <span class="val">to_markdown() · captions · CSV</span></li>
+          <li><strong>Guard</strong> <span class="val">hard error if pc=70 means bar</span></li>
+          <li><strong>Hints</strong> <span class="val">list --of-hints · typical O/F bands</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- START -->
+<section class="section s-void" id="start">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Usage</div>
+      <h2>MINIMAL <em>PATH</em></h2>
+      <p>Python 3.10+ (3.11 / 3.12 fine). Windows, Linux, or macOS. Cantera and matplotlib install with the package.</p>
+    </div>
+
+    <div class="two-col">
+      <div class="code-block">
+        <div class="term-bar">
+          <div class="tdot td-r"></div><div class="tdot td-a"></div><div class="tdot td-g"></div>
+          <span class="term-name">install</span>
+        </div>
+        <pre><span class="tp">$</span> <span class="tc">python -m venv .venv</span>
+<span class="tco"># Windows:  .venv\Scripts\activate</span>
+<span class="tco"># macOS/Linux: source .venv/bin/activate</span>
+<span class="tp">$</span> <span class="tc">pip install propwrap</span>
+<span class="tp">$</span> <span class="tc">propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20</span>
+<span class="tco"># from source: pip install -e ".[dev]"</span></pre>
+      </div>
+      <div class="code-block">
+        <div class="term-bar">
+          <div class="tdot td-r"></div><div class="tdot td-a"></div><div class="tdot td-g"></div>
+          <span class="term-name">python</span>
+        </div>
+        <pre><span class="tc">from propwrap import Mixture, compare_propellants, convert</span>
+
+<span class="tc">m = Mixture(</span><span class="tv">"RP-1"</span><span class="tc">,</span> <span class="tv">"LOX"</span><span class="tc">)</span>
+<span class="tc">r = m.evaluate(of=</span><span class="tv">2.56</span><span class="tc">, pc_bar=</span><span class="tv">70</span><span class="tc">, eps=</span><span class="tv">20</span><span class="tc">)</span>
+<span class="tc">print(r)</span>
+
+<span class="tc">sw = m.scan_of((</span><span class="tv">2.0</span><span class="tc">,</span> <span class="tv">3.2</span><span class="tc">,</span> <span class="tv">0.1</span><span class="tc">), pc_bar=</span><span class="tv">70</span><span class="tc">, eps=</span><span class="tv">20</span><span class="tc">)</span>
+<span class="tc">print(sw.optimum().of_ratio)</span>
+
+<span class="tc">print(compare_propellants(</span>
+    <span class="tc">[</span><span class="tv">"RP-1/LOX"</span><span class="tc">,</span> <span class="tv">"CH4/LOX"</span><span class="tc">,</span> <span class="tv">"LH2/LOX"</span><span class="tc">],</span>
+    <span class="tc">pc_bar=</span><span class="tv">70</span><span class="tc">, eps=</span><span class="tv">40</span><span class="tc">,</span>
+<span class="tc">))</span>
+
+<span class="tc">print(convert(</span><span class="tv">70</span><span class="tc">,</span> <span class="tv">"bar"</span><span class="tc">,</span> <span class="tv">"Pa"</span><span class="tc">))</span>  <span class="tco"># 7000000.0</span></pre>
+      </div>
+    </div>
+
+    <p style="margin-top:28px;font-size:0.88rem;color:var(--muted);">
+      Longer walkthrough: <a href="../docs/how_to_use.md">docs/how_to_use.md</a> ·
+      API fields: <a href="../docs/api_reference.md">docs/api_reference.md</a> ·
+      Validation: <a href="../docs/validation.md">docs/validation.md</a>
+    </p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- LIMITS -->
+<section class="section s-deep" id="limits">
+  <div class="section-inner">
+    <div class="sh">
+      <div class="sh-label">Limits</div>
+      <h2>READ BEFORE YOU <em>CITE</em> A NUMBER</h2>
+    </div>
+    <div class="card-grid-3">
+      <div class="big-card">
+        <span class="card-tag">Theory</span>
+        <h3>IDEAL <em>1-D</em> CEA</h3>
+        <p>No kinetics, multiphase losses, or injector efficiency baked in. Shifting and frozen bracket chemistry; flight has more losses than either.</p>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Knobs</span>
+        <h3>η FACTORS ARE <em>ROUGH</em></h3>
+        <p>Optional efficiency multipliers are knobs, not a validated engine model. Custom propellant cards are structure-checked, not thermodynamically certified.</p>
+      </div>
+      <div class="big-card">
+        <span class="card-tag">Legal</span>
+        <h3>MIT · CHECK <em>ROCKETCEA</em></h3>
+        <p>This repo’s code is MIT. RocketCEA is GPL-family — check both if you ship proprietary work. Not flight-qualified software. Don’t treat it as such.</p>
+      </div>
+    </div>
+    <p style="margin-top:36px;font-size:0.82rem;color:var(--dim);font-family:var(--font-mono);letter-spacing:0.04em;">
+      Independent open source · not affiliated with ISRO, DRDO, NAL, HAL, NASA, or any agency.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-band">
+    <div>
+      <div class="footer-logo">PROP<span>WRAP</span></div>
+      <p class="footer-copy" style="margin-top:10px;">
+        MIT · independent open source<br/>
+        Built on NASA CEA (RocketCEA) and optional Cantera
+      </p>
+    </div>
+    <ul class="footer-nav">
+      <li><a href="#about">About</a></li>
+      <li><a href="#validation">Validation</a></li>
+      <li><a href="#start">Start</a></li>
+      <li><a href="https://github.com/shanthoshkv/propwrap" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="footer-copy">
+      Not affiliated with ISRO, DRDO, NAL, HAL, or NASA<br/>
+      <a href="https://github.com/shanthoshkv/propwrap" style="color:var(--muted);">github.com/shanthoshkv/propwrap</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // mobile menu
+  var btn = document.getElementById('menuBtn');
+  var drawer = document.getElementById('navDrawer');
+  if (btn && drawer) {
+    btn.addEventListener('click', function () {
+      drawer.classList.toggle('open');
+    });
+    drawer.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () { drawer.classList.remove('open'); });
+    });
+  }
+
+  // active nav highlight
+  var links = document.querySelectorAll('.nav-links a[href^="#"]');
+  var sections = [];
+  links.forEach(function (a) {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ el: el, a: a });
+  });
+  function onScroll() {
+    var y = window.scrollY + 90;
+    var cur = null;
+    sections.forEach(function (s) {
+      if (s.el.offsetTop <= y) cur = s;
+    });
+    sections.forEach(function (s) {
+      if (s === cur) s.a.classList.add('on');
+      else s.a.classList.remove('on');
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>
