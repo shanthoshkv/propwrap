@@ -13,8 +13,9 @@
 
 ## Project website
 
-**[Open the project website](https://cdn.jsdelivr.net/gh/shanthoshkv/propwrap@main/website/index.html)** — overview, SI units, validation, student path.  
-Source on GitHub: [`website/index.html`](https://github.com/shanthoshkv/propwrap/blob/main/website/index.html).
+**[https://aboutkvs.vercel.app/propwrap.html](https://aboutkvs.vercel.app/propwrap.html)** — full project site (overview, SI units, validation, install).
+
+Same page is also in the repo as [`website/index.html`](https://github.com/shanthoshkv/propwrap/blob/main/website/index.html) (and `website/propwrap.html`).
 
 Local preview from a clone:
 
