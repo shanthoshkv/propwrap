@@ -62,9 +62,9 @@ def _package_version() -> str:
 
         return version("propwrap")
     except PackageNotFoundError:
-        return "0.1.2"
+        return "0.1.3"
     except Exception:
-        return "0.1.2"
+        return "0.1.3"
 
 
 __version__ = _package_version()
