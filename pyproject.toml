@@ -4,17 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "propwrap"
-version = "0.1.2"
+version = "0.1.3"
 description = "SI-native Python library for liquid bipropellant thermochemistry on NASA CEA (RocketCEA) with Cantera cross-checks"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
-    { name = "Shanthosh K V", email = "shanthoshkv@users.noreply.github.com" },
+    { name = "Shanthosh K V", email = "shanthoshkv@gmail.com" },
 ]
 maintainers = [
-    { name = "Shanthosh K V", email = "shanthoshkv@users.noreply.github.com" },
+    { name = "Shanthosh K V", email = "shanthoshkv@gmail.com" },
 ]
 keywords = [
     "rocket",
