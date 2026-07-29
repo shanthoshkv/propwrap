@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "propwrap"
-version = "0.1.0"
+version = "0.1.2"
 description = "SI-native Python library for liquid bipropellant thermochemistry on NASA CEA (RocketCEA) with Cantera cross-checks"
 readme = "README.md"
 license = "MIT"
@@ -62,6 +62,7 @@ propwrap = "propwrap.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/shanthoshkv/propwrap"
+Website = "https://cdn.jsdelivr.net/gh/shanthoshkv/propwrap@main/website/index.html"
 Repository = "https://github.com/shanthoshkv/propwrap"
 Issues = "https://github.com/shanthoshkv/propwrap/issues"
 Documentation = "https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md"

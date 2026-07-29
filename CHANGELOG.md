@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-07-30
+
+### Fixed
+
+- PyPI long description: all doc/site links are absolute (GitHub / CDN) so Website and file links work on pypi.org
+- Add explicit `Website` project URL pointing at the rendered HTML site
+
+## [0.1.1] — 2026-07-30
+
+### Fixed
+
+- Add `python -m propwrap` entry (`__main__.py`) so module invocation works, not only the `propwrap` console script
+
 ## [0.1.0] — 2026-07-29
 
 First public release.
@@ -31,4 +44,6 @@ First public release.
 - **Stable API (0.1.x):** `Mixture`, `compare_propellants`, `characterize`, `convert` / `units`, `PerformanceResult` fields listed in `docs/api_reference.md`, CLI `run` / `homework`
 - **May change:** Cantera cross-check tolerances, plot styling, η efficiency knobs, internal cache layout
 
+[0.1.2]: https://github.com/shanthoshkv/propwrap/releases/tag/v0.1.2
+[0.1.1]: https://github.com/shanthoshkv/propwrap/releases/tag/v0.1.1
 [0.1.0]: https://github.com/shanthoshkv/propwrap/releases/tag/v0.1.0
