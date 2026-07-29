@@ -110,6 +110,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv-smoke
 env/
 venv/
 ENV/
@@ -158,3 +159,11 @@ Thumbs.db
 *.png
 *.svg
 !docs/**/*.png
+
+# Student homework packs generated locally
+propwrap_lab_*/
+propwrap_kerolox_*/
+propwrap_methalox_*/
+propwrap_hydrolox_*/
+propwrap_storable_*/
+propwrap_custom_*/

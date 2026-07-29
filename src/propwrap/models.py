@@ -118,6 +118,11 @@ class PerformanceResult(BaseModel):
 
         return performance_summary(self, frozen=frozen)
 
+    def to_markdown(self, *, heading: str = "Performance") -> str:
+        from propwrap.reports import performance_to_markdown
+
+        return performance_to_markdown(self, heading=heading)
+
     def __str__(self) -> str:
         return self.summary()
 
@@ -399,6 +404,11 @@ class TradeResult(BaseModel):
 
     def summary(self) -> str:
         return self.summary_table()
+
+    def to_markdown(self, *, heading: str = "Propellant trade") -> str:
+        from propwrap.reports import trade_to_markdown
+
+        return trade_to_markdown(self, heading=heading)
 
     def __str__(self) -> str:
         return self.summary_table()

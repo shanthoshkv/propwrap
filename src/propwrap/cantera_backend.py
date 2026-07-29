@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import cantera as ct
+
 # CEA / common rocket species → Cantera gri30-style names
 _SPECIES_MAP: dict[str, str] = {
     "CO2": "CO2",
@@ -41,8 +43,6 @@ _SPECIES_MAP: dict[str, str] = {
 
 def _get_solution() -> Any:
     """Load a Cantera Solution suitable for high-T product thermo."""
-    import cantera as ct
-
     for name in ("nasa_gas.yaml", "gri30.yaml", "h2o2.yaml"):
         try:
             return ct.Solution(name)
@@ -99,8 +99,6 @@ def gamma_frozen(
 
     ``P_bar`` is accepted for back-compat and converted to Pa.
     """
-    import cantera as ct
-
     if species_mole_fractions is None:
         species_mole_fractions = {}
     if P_pa is None:

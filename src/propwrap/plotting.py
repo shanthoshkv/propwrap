@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+import os
 from typing import Sequence
+
+# Headless-friendly default (lab servers, CI, broken Tk installs)
+import matplotlib
+
+if os.environ.get("MPLBACKEND") is None:
+    matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes

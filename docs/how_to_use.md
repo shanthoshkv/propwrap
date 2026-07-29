@@ -7,6 +7,20 @@ If something fails, jump to [Troubleshooting](#troubleshooting) at the bottom.
 
 ---
 
+## Install first
+
+Full install for lab PCs: **[INSTALL.md](INSTALL.md)**  
+
+After install, generate a complete lab folder:
+
+```bash
+propwrap homework kerolox --name YourName
+```
+
+Concepts: **[learning/](learning/)** · Cheat sheet: **[cheat_sheet.md](cheat_sheet.md)** · Assignment: **[lab_assignment.md](lab_assignment.md)**
+
+---
+
 ## What is propwrap in plain English?
 
 Imagine you want to know:
@@ -52,25 +66,9 @@ It is for **propellant performance**, not for designing a whole rocket engine (n
 
 ## Part 1 — Install (do this once)
 
-### Step 1: Open a terminal in the project folder
+### Step 1: Create a “virtual environment”
 
-Go to the folder that contains `README.md` and `pyproject.toml` (the `propwrap` project root).
-
-**Windows (PowerShell):**
-
-```powershell
-cd path\to\propwrap
-```
-
-**Mac / Linux:**
-
-```bash
-cd path/to/propwrap
-```
-
-### Step 2: Create a “virtual environment”
-
-A virtual environment is a **private mini-Python** only for this project, so you don’t break other software.
+A virtual environment is a **private mini-Python** for this project, so you don’t break other software.
 
 **Windows:**
 
@@ -90,24 +88,31 @@ source .venv/bin/activate
 
 When it works, you often see `(.venv)` at the start of your terminal line.
 
-### Step 3: Install propwrap
+### Step 2: Install propwrap
+
+**Recommended (from PyPI):**
 
 ```bash
+pip install propwrap
+```
+
+This installs propwrap plus **rocketcea**, **cantera**, **matplotlib**, pydantic, and numpy. First install can take several minutes.
+
+**From a git clone (development / course repo):**
+
+```bash
+cd path/to/propwrap
 pip install -e ".[dev]"
 ```
 
-What this means:
+- `-e` = editable install (code changes apply immediately)  
+- `.[dev]` = also install pytest and packaging tools  
 
-- `pip` = Python’s package installer  
-- `-e` = “editable” install (code changes apply immediately)  
-- `.[dev]` = install this project **and** test tools  
-
-Wait until it finishes without red errors.
-
-### Step 4: Check that it works
+### Step 3: Check that it works
 
 ```bash
 propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+python -c "import cantera, matplotlib, propwrap; print(propwrap.__version__)"
 ```
 
 You should see a short table of results (Isp, c*, temperatures, etc.).

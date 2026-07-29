@@ -246,6 +246,27 @@ class Case:
             apply_cryo_defaults=self.apply_cryo_defaults,
         )
 
+    # --- student / course presets ---
+    @classmethod
+    def student_lab(cls) -> Case:
+        """Typical university lab: moderate Pc, moderate ε, cryo defaults on."""
+        return cls(pc_bar=70.0, eps=20.0, apply_cryo_defaults=True, verbose=False)
+
+    @classmethod
+    def booster(cls) -> Case:
+        """Booster-ish study point: higher Pc, modest ε."""
+        return cls(pc_bar=100.0, eps=20.0, apply_cryo_defaults=True)
+
+    @classmethod
+    def upper_stage(cls) -> Case:
+        """Upper-stage-ish: moderate Pc, large ε (vacuum-oriented)."""
+        return cls(pc_bar=50.0, eps=80.0, apply_cryo_defaults=True)
+
+    @classmethod
+    def rcs_storable(cls) -> Case:
+        """Low-Pc storable / ACS-style study point."""
+        return cls(pc_bar=10.0, eps=40.0, apply_cryo_defaults=False)
+
 
 def _coalesce_of(
     of: float | None,
