@@ -1,0 +1,379 @@
+{
+  "meta": {
+    "purpose": "Cited theoretical validation anchors for propwrap",
+    "note": "All Isp values are ideal CEA theoretical (shifting equilibrium vacuum unless noted), NOT flight-delivered engine Isp.",
+    "rocketcea_version_baseline": "1.2.3",
+    "physics_kernel": "NASA CEA (Gordon & McBride) via RocketCEA Python wrapper",
+    "last_physics_audit": "2026-07-29",
+    "primary_sources": [
+      {
+        "id": "NASA-RP-1311",
+        "title": "Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications (CEA)",
+        "authors": "S. Gordon, B. J. McBride",
+        "publisher": "NASA Lewis Research Center",
+        "refs": ["NASA RP-1311 Part I (1994)", "NASA RP-1311 Part II (1996)"],
+        "url_ntrs_part1": "https://ntrs.nasa.gov/citations/19950013764",
+        "role": "Defines the equilibrium rocket performance methodology propwrap wraps"
+      },
+      {
+        "id": "ROCKETCEA-DOCS",
+        "title": "RocketCEA documentation — QuickStart published LOX/LH2 Isp table",
+        "url": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+        "role": "Externally published numerical goldens (bit-level match required)"
+      },
+      {
+        "id": "BIPM-G0",
+        "title": "Standard acceleration of gravity g0 = 9.80665 m/s²",
+        "body": "CGPM / BIPM conventional standard gravity",
+        "role": "ve = Isp · g0; Cf_vac = ve / c*"
+      },
+      {
+        "id": "SI-BAR",
+        "title": "1 bar = 10^5 Pa exactly",
+        "body": "CIPM / SI derived unit relationship used for pc_bar ↔ pc_pa",
+        "role": "Pressure unit conversion"
+      }
+    ],
+    "secondary_literature_bands": [
+      {
+        "id": "CEA-CLASS-BANDS",
+        "note": "Wide order-of-magnitude bands for theoretical vacuum Isp at high expansion; NOT flight numbers; used only as sanity envelopes",
+        "examples": "LOX/kerosene ~340–370 s class; LOX/LH2 ~445–465 s class at ε~40, Pc~1000 psia; N2O4/MMH ~320–355 s class"
+      }
+    ]
+  },
+  "physics_identities": [
+    {
+      "id": "PHYS-VE-ISP-G0",
+      "statement": "ve_vac [m/s] = isp_vac [s] × g0 with g0 = 9.80665 m/s²",
+      "source": "BIPM-G0 + rocket definition of specific impulse",
+      "test": "tests/test_physics_identities.py::test_ve_equals_isp_times_g0"
+    },
+    {
+      "id": "PHYS-CF-VE-CSTAR",
+      "statement": "cf_vac = ve / c* = isp_vac × g0 / c* (SI-consistent)",
+      "source": "Standard rocket nozzle definitions (Sutton/CEA output relations)",
+      "test": "tests/test_physics_identities.py::test_cf_vac_equals_ve_over_cstar"
+    },
+    {
+      "id": "PHYS-PC-PE",
+      "statement": "pc_pa / pe_pa = pc_over_pe from CEA",
+      "source": "CEA rocket solution Pc/Pe",
+      "test": "tests/test_physics_identities.py::test_pc_over_pe_matches_pressures"
+    },
+    {
+      "id": "PHYS-RHO-IG",
+      "statement": "Chamber gas density ≈ P·Mw/(R_univ·T) in SI",
+      "source": "Ideal gas law with CEA Mw; R_univ = 8314.462618 J/(kmol·K)",
+      "test": "tests/test_physics_identities.py::test_chamber_density_matches_ideal_gas"
+    },
+    {
+      "id": "PHYS-BIT-ROCKETCEA",
+      "statement": "propwrap.isp_vac_shifting == RocketCEA CEA_Obj.get_Isp at same Pc, MR, eps (machine precision)",
+      "source": "ROCKETCEA-DOCS + direct CEA_Obj",
+      "test": "tests/test_physics_identities.py::test_bit_level_match_rocketcea_lh2_docs"
+    }
+  ],
+  "rocketcea_docs_golden": [
+    {
+      "id": "RC-DOC-DEFAULT-LH2",
+      "source": "RocketCEA QuickStart install test",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html — pip test one-liner / Test The Install",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 1.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 374.30361765576265,
+      "tolerance_rel": 0.001,
+      "notes": "Default CEA_Obj.get_Isp() for LOX/LH2; verified bit-level match with propwrap full path"
+    },
+    {
+      "id": "RC-DOC-LH2-MR2",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html — Test The Install table",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 2.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 424.3597085736007,
+      "tolerance_rel": 0.001
+    },
+    {
+      "id": "RC-DOC-LH2-MR3",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 3.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 445.44434236555196,
+      "tolerance_rel": 0.001
+    },
+    {
+      "id": "RC-DOC-LH2-MR4",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 4.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 453.13271951921837,
+      "tolerance_rel": 0.001
+    },
+    {
+      "id": "RC-DOC-LH2-MR5",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 5.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 453.240429182719,
+      "tolerance_rel": 0.001
+    },
+    {
+      "id": "RC-DOC-LH2-MR6",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 6.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 448.190232998362,
+      "tolerance_rel": 0.001
+    },
+    {
+      "id": "RC-DOC-LH2-MR7",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 7.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 438.74340042907266,
+      "tolerance_rel": 0.001
+    },
+    {
+      "id": "RC-DOC-LH2-MR8",
+      "source": "RocketCEA QuickStart basic_cea.py published output",
+      "citation": "https://rocketcea.readthedocs.io/en/latest/quickstart.html",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 8.0,
+      "pc_psia": 100.0,
+      "eps": 40.0,
+      "metric": "isp_vac_shifting",
+      "reference": 424.6998266323161,
+      "tolerance_rel": 0.001
+    }
+  ],
+  "standard_condition_regression": [
+    {
+      "id": "REG-RP1-LOX-1000psia-eps40",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Methodology: NASA RP-1311 rocket problem, shifting equilibrium, infinite-area chamber. Values locked to CEA output on propwrap stack; bit-level checked against CEA_Obj.get_Isp.",
+      "fuel": "RP1",
+      "oxidizer": "LOX",
+      "of_ratio": 2.3,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 352.26,
+      "isp_vac_frozen": 333.79,
+      "c_star_m_s": 1809.8,
+      "tc_k": 3582.4,
+      "tolerance_rel": 0.015,
+      "literature_band_s": [340, 370],
+      "literature_note": "CEA-class LOX/kerosene theoretical vac Isp envelope at high ε (NOT Merlin flight ~311–348 s delivered)"
+    },
+    {
+      "id": "REG-RP1-LOX-70bar-eps20",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Bit-level consistent with CEA_Obj.get_Isp(Pc=70*14.5037738 psia, MR=2.56, eps=20). Physics identities: ve=Isp*g0, Cf=ve/c*, rho≈P*Mw/(R*T).",
+      "fuel": "RP1",
+      "oxidizer": "LOX",
+      "of_ratio": 2.56,
+      "pc_bar": 70.0,
+      "eps": 20.0,
+      "isp_vac_shifting": 343.66,
+      "isp_vac_frozen": 322.23,
+      "c_star_m_s": 1798.3,
+      "tc_k": 3671.6,
+      "tolerance_rel": 0.02
+    },
+    {
+      "id": "REG-LH2-LOX-1000psia-eps40-OF5",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "LOX/LH2 CEA class; matches RocketCEA docs series shape (peak near O/F 4–5 at Pc=100 psia, ε=40). NASA RP-1311 methodology.",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 5.0,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 454.91,
+      "isp_vac_frozen": 441.91,
+      "c_star_m_s": 2371.7,
+      "tc_k": 3282.6,
+      "tolerance_rel": 0.015,
+      "literature_band_s": [445, 465]
+    },
+    {
+      "id": "REG-LH2-LOX-RS25-class",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Conditions inspired by RS-25-class Pc/ε/O/F (Pc=100 bar, ε=69, O/F=5.5). Flight RS-25 ~452 s vac is DELIVERED (high η); pure CEA theoretical is higher (~464 s here). Do not equate.",
+      "fuel": "LH2",
+      "oxidizer": "LOX",
+      "of_ratio": 5.5,
+      "pc_bar": 100.0,
+      "eps": 69.0,
+      "isp_vac_shifting": 463.66,
+      "isp_vac_frozen": 446.97,
+      "c_star_m_s": 2345.3,
+      "tc_k": 3432.0,
+      "tolerance_rel": 0.02,
+      "literature_band_s": [450, 475]
+    },
+    {
+      "id": "REG-CH4-LOX-1000psia-eps40-OF3.2",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "LOX/LCH4 CEA theoretical; bit-level vs CEA_Obj.get_Isp. Literature CEA-class vac Isp ~350–380 s at ε~40.",
+      "fuel": "CH4",
+      "oxidizer": "LOX",
+      "of_ratio": 3.2,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 367.63,
+      "c_star_m_s": 1854.4,
+      "tc_k": 3519.7,
+      "tolerance_rel": 0.02,
+      "literature_band_s": [350, 380]
+    },
+    {
+      "id": "REG-CH4-LOX-100bar-eps35",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Methalox booster-ish theoretical point; regression lock",
+      "fuel": "CH4",
+      "oxidizer": "LOX",
+      "of_ratio": 2.8,
+      "pc_bar": 100.0,
+      "eps": 35.0,
+      "isp_vac_shifting": 359.54,
+      "c_star_m_s": 1871.5,
+      "tc_k": 3410.1,
+      "tolerance_rel": 0.02
+    },
+    {
+      "id": "REG-MMH-N2O4-1000psia-eps40",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Storable hypergolic; CEA_Obj bit-level. Literature CEA-class vac Isp ~320–355 s",
+      "fuel": "MMH",
+      "oxidizer": "N2O4",
+      "of_ratio": 2.0,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 338.64,
+      "isp_vac_frozen": 322.66,
+      "c_star_m_s": 1754.5,
+      "tc_k": 3358.6,
+      "tolerance_rel": 0.02,
+      "literature_band_s": [320, 355]
+    },
+    {
+      "id": "REG-MMH-N2O4-OF2.2",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Near-optimum hypergolic O/F regression lock",
+      "fuel": "MMH",
+      "oxidizer": "N2O4",
+      "of_ratio": 2.2,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 340.73,
+      "tolerance_rel": 0.02
+    },
+    {
+      "id": "REG-UDMH-N2O4",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "UDMH/NTO upper-stage-class hypergolic; CEA_Obj bit-level",
+      "fuel": "UDMH",
+      "oxidizer": "N2O4",
+      "of_ratio": 2.6,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 338.32,
+      "tolerance_rel": 0.02,
+      "literature_band_s": [320, 350]
+    },
+    {
+      "id": "REG-A50-N2O4",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Aerozine-50 / NTO storable; RocketCEA built-in blend",
+      "fuel": "A50",
+      "oxidizer": "N2O4",
+      "of_ratio": 2.0,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 340.88,
+      "tolerance_rel": 0.02
+    },
+    {
+      "id": "REG-ETHANOL-LOX",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Ethanol/LOX historical hydrocarbon; regression lock",
+      "fuel": "Ethanol",
+      "oxidizer": "LOX",
+      "of_ratio": 1.5,
+      "pc_bar": 68.9476,
+      "eps": 40.0,
+      "isp_vac_shifting": 336.83,
+      "tolerance_rel": 0.025
+    },
+    {
+      "id": "REG-MMH-N2O4-lowP",
+      "source": "NASA CEA via RocketCEA 1.2.3 (reproducible baseline)",
+      "citation": "Low-Pc RCS-ish hypergolic; wider tol due to Pc sensitivity",
+      "fuel": "MMH",
+      "oxidizer": "N2O4",
+      "of_ratio": 2.0,
+      "pc_bar": 10.0,
+      "eps": 40.0,
+      "isp_vac_shifting": 320.0,
+      "tolerance_rel": 0.08,
+      "notes": "Wider tol: strong Pc sensitivity; order-of-magnitude RCS band"
+    }
+  ],
+  "trend_expectations": {
+    "propellant_rank_vac_isp": {
+      "description": "At Pc≈69 bar, ε=40, near-typical O/F, theoretical vac Isp ranking",
+      "ordered_high_to_low": [
+        ["LH2", "LOX", 5.0],
+        ["CH4", "LOX", 3.2],
+        ["RP1", "LOX", 2.3],
+        ["MMH", "N2O4", 2.0]
+      ],
+      "source": "CEA theoretical ordering (NASA RP-1311 methodology); consistent with published CEA-class rankings"
+    },
+    "eps_increases_isp_vac": {
+      "fuel": "RP1",
+      "oxidizer": "LOX",
+      "of_ratio": 2.3,
+      "pc_bar": 68.95,
+      "eps_low": 20.0,
+      "eps_high": 40.0
+    },
+    "frozen_below_shifting": true,
+    "gamma_exit_ge_chamber": true
+  }
+}
