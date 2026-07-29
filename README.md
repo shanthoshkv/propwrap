@@ -3,7 +3,7 @@
 **Typed propellant thermochemistry for liquid rockets** — a clean Python API over [NASA CEA](https://www1.grc.nasa.gov/research-and-engineering/ceaweb/) (via [RocketCEA](https://rocketcea.readthedocs.io/)) with optional [Cantera](https://cantera.org/) cross-checks.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/shanthoshkv/propwrap/blob/main/LICENSE)
 
 > **Scope:** propellants and mixture performance — not full engine design (nozzles, injectors, cooling cycles).  
 > **Numbers:** ideal theoretical CEA unless you apply efficiency factors. **Not flight-certified.**  
@@ -13,16 +13,15 @@
 
 ## Project website
 
-**[website/index.html](website/index.html)** — detailed technical site (overview, motivation, architecture, SI units, validation).  
-Open the file in a browser, or serve the folder:
+**[Open the project website](https://cdn.jsdelivr.net/gh/shanthoshkv/propwrap@main/website/index.html)** — overview, SI units, validation, student path.  
+Source on GitHub: [`website/index.html`](https://github.com/shanthoshkv/propwrap/blob/main/website/index.html).
+
+Local preview from a clone:
 
 ```bash
-# from repo root
 python -m http.server 8080 --directory website
-# then visit http://localhost:8080
+# then http://localhost:8080
 ```
-
-For GitHub Pages, point Pages at the `/website` folder (or copy `website/` to `docs/` if you prefer the docs branch layout).
 
 ---
 
@@ -30,11 +29,11 @@ For GitHub Pages, point Pages at the `/website` folder (or copy `website/` to `d
 
 | Start here | Link |
 |------------|------|
-| **Install (lab PCs)** | [docs/INSTALL.md](docs/INSTALL.md) |
-| **How to use (beginner)** | [docs/how_to_use.md](docs/how_to_use.md) |
-| **Learning path** | [docs/learning/](docs/learning/) |
-| **1-page cheat sheet** | [docs/cheat_sheet.md](docs/cheat_sheet.md) |
-| **Sample lab assignment** | [docs/lab_assignment.md](docs/lab_assignment.md) |
+| **Install (lab PCs)** | [docs/INSTALL.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/INSTALL.md) |
+| **How to use (beginner)** | [docs/how_to_use.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md) |
+| **Learning path** | [docs/learning/](https://github.com/shanthoshkv/propwrap/tree/main/docs/learning) |
+| **1-page cheat sheet** | [docs/cheat_sheet.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/cheat_sheet.md) |
+| **Sample lab assignment** | [docs/lab_assignment.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/lab_assignment.md) |
 | **Generate lab pack** | `propwrap homework kerolox --name YourName` |
 
 ```bash
@@ -74,7 +73,7 @@ Working with CEA is powerful but awkward for modern workflows:
 | Dicts / parsed strings as “results” | Pydantic models with readable `print(result)` |
 | Comparing RP-1 vs CH₄ vs LH₂ at the **same** O/F | Trades at **each pair’s own optimum O/F** |
 | “Did I already run this?” | Transparent SQLite cache |
-| Hard to trust numbers | Documented [validation suite](docs/validation.md) |
+| Hard to trust numbers | Documented [validation suite](https://github.com/shanthoshkv/propwrap/blob/main/docs/validation.md) |
 
 **Why that matters:** a wrong γ, Isp, or mixture ratio propagates into every downstream calculation. Propellant choices are early and high-leverage. A single tested API reduces silent mistakes across a team or project.
 
@@ -150,7 +149,7 @@ pip install -e ".[dev]"
 pytest -q
 ```
 
-Full walkthrough: **[docs/how_to_use.md](docs/how_to_use.md)** · Lab install notes: **[docs/INSTALL.md](docs/INSTALL.md)**.
+Full walkthrough: **[docs/how_to_use.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md)** · Lab install notes: **[docs/INSTALL.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/INSTALL.md)**.
 
 ---
 
@@ -268,7 +267,7 @@ units.bar_to_pa(70)
 units.isp_s_to_ve_m_s(300)
 ```
 
-Module reference: [`src/propwrap/units.py`](src/propwrap/units.py).
+Module reference: [`src/propwrap/units.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/units.py).
 
 ---
 
@@ -276,10 +275,10 @@ Module reference: [`src/propwrap/units.py`](src/propwrap/units.py).
 
 | Asset | Description |
 |-------|-------------|
-| **[docs/validation.md](docs/validation.md)** | Full report: NASA RP-1311, RocketCEA goldens, SI identities |
-| **[tests/data/validation_catalog.json](tests/data/validation_catalog.json)** | Machine-readable anchors + primary sources |
-| **[tests/test_physics_identities.py](tests/test_physics_identities.py)** | Hard physics: \(v_e=I_{sp}g_0\), \(C_f=v_e/c^*\), CEA bit-level match |
-| **[tests/test_validation_suite.py](tests/test_validation_suite.py)** | Catalog-driven multi-propellant suite |
+| **[docs/validation.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/validation.md)** | Full report: NASA RP-1311, RocketCEA goldens, SI identities |
+| **[tests/data/validation_catalog.json](https://github.com/shanthoshkv/propwrap/blob/main/tests/data/validation_catalog.json)** | Machine-readable anchors + primary sources |
+| **[tests/test_physics_identities.py](https://github.com/shanthoshkv/propwrap/blob/main/tests/test_physics_identities.py)** | Hard physics: \(v_e=I_{sp}g_0\), \(C_f=v_e/c^*\), CEA bit-level match |
+| **[tests/test_validation_suite.py](https://github.com/shanthoshkv/propwrap/blob/main/tests/test_validation_suite.py)** | Catalog-driven multi-propellant suite |
 
 **Secured against:**
 
@@ -302,13 +301,13 @@ pytest -q
 
 | Document | Audience |
 |----------|----------|
-| **[docs/how_to_use.md](docs/how_to_use.md)** | **Beginners — start here** |
-| [README.md](README.md) | Overview (this file) |
-| [docs/api_reference.md](docs/api_reference.md) | API field/method list |
-| [docs/validation.md](docs/validation.md) | Validation report |
-| [examples/](examples/) | Runnable scripts |
-| [LICENSE](LICENSE) | MIT |
-| [pyproject.toml](pyproject.toml) | Package metadata |
+| **[docs/how_to_use.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md)** | **Beginners — start here** |
+| [README.md](https://github.com/shanthoshkv/propwrap/blob/main/README.md) | Overview (this file) |
+| [docs/api_reference.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/api_reference.md) | API field/method list |
+| [docs/validation.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/validation.md) | Validation report |
+| [examples/](https://github.com/shanthoshkv/propwrap/tree/main/examples) | Runnable scripts |
+| [LICENSE](https://github.com/shanthoshkv/propwrap/blob/main/LICENSE) | MIT |
+| [pyproject.toml](https://github.com/shanthoshkv/propwrap/blob/main/pyproject.toml) | Package metadata |
 
 ---
 
@@ -332,13 +331,13 @@ propwrap/
 
 | Module | Role |
 |--------|------|
-| [`propellant.py`](src/propwrap/propellant.py) | `Mixture` main API |
-| [`units.py`](src/propwrap/units.py) | SI converters |
-| [`workflows.py`](src/propwrap/workflows.py) | characterize / compare / blend |
-| [`trades.py`](src/propwrap/trades.py) | optimum-O/F trades, density-Isp |
-| [`registry.py`](src/propwrap/registry.py) | propellant identity |
-| [`cea_backend.py`](src/propwrap/cea_backend.py) | RocketCEA + English→SI |
-| [`cli.py`](src/propwrap/cli.py) | command line |
+| [`propellant.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/propellant.py) | `Mixture` main API |
+| [`units.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/units.py) | SI converters |
+| [`workflows.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/workflows.py) | characterize / compare / blend |
+| [`trades.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/trades.py) | optimum-O/F trades, density-Isp |
+| [`registry.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/registry.py) | propellant identity |
+| [`cea_backend.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/cea_backend.py) | RocketCEA + English→SI |
+| [`cli.py`](https://github.com/shanthoshkv/propwrap/blob/main/src/propwrap/cli.py) | command line |
 
 ---
 
@@ -352,12 +351,12 @@ python examples/lox_ch4_case.py
 
 | Script | Topic |
 |--------|--------|
-| [examples/basic_performance.py](examples/basic_performance.py) | Single point |
-| [examples/of_sweep_lox_rp1.py](examples/of_sweep_lox_rp1.py) | O/F sweep |
-| [examples/propellant_trade.py](examples/propellant_trade.py) | Multi-pair trade |
-| [examples/lox_ch4_case.py](examples/lox_ch4_case.py) | Methalox |
-| [examples/custom_propellants.py](examples/custom_propellants.py) | Custom cards |
-| [examples/gamma_profile_for_nozzle.py](examples/gamma_profile_for_nozzle.py) | γ(ε) data shape |
+| [examples/basic_performance.py](https://github.com/shanthoshkv/propwrap/blob/main/examples/basic_performance.py) | Single point |
+| [examples/of_sweep_lox_rp1.py](https://github.com/shanthoshkv/propwrap/blob/main/examples/of_sweep_lox_rp1.py) | O/F sweep |
+| [examples/propellant_trade.py](https://github.com/shanthoshkv/propwrap/blob/main/examples/propellant_trade.py) | Multi-pair trade |
+| [examples/lox_ch4_case.py](https://github.com/shanthoshkv/propwrap/blob/main/examples/lox_ch4_case.py) | Methalox |
+| [examples/custom_propellants.py](https://github.com/shanthoshkv/propwrap/blob/main/examples/custom_propellants.py) | Custom cards |
+| [examples/gamma_profile_for_nozzle.py](https://github.com/shanthoshkv/propwrap/blob/main/examples/gamma_profile_for_nozzle.py) | γ(ε) data shape |
 
 ---
 
@@ -370,10 +369,10 @@ Treat these as stable across 0.1.x patch releases:
 | Core | `Mixture`, `Propellant`, `evaluate`, `scan_of`, `pc_bar` / `pc_mpa` / `pc` |
 | Workflows | `compare_propellants`, `characterize`, `define_blend`, `density_isp_curve` |
 | Units | `convert`, `propwrap.units` |
-| Results | `PerformanceResult` fields in [docs/api_reference.md](docs/api_reference.md) |
+| Results | `PerformanceResult` fields in [docs/api_reference.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/api_reference.md) |
 | CLI | `propwrap run`, `homework`, `scan-of`, `characterize`, `compare-pairs` |
 
-May still change: Cantera cross-check details, plot styling, η efficiency knobs, cache internals. See [CHANGELOG.md](CHANGELOG.md).
+May still change: Cantera cross-check details, plot styling, η efficiency knobs, cache internals. See [CHANGELOG.md](https://github.com/shanthoshkv/propwrap/blob/main/CHANGELOG.md).
 
 ---
 
@@ -400,7 +399,7 @@ twine check dist/*
 
 CI runs on Ubuntu and Windows for Python 3.10–3.12 (see `.github/workflows/ci.yml`).
 
-Release steps: [docs/RELEASING.md](docs/RELEASING.md).
+Release steps: [docs/RELEASING.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/RELEASING.md).
 
 ---
 
@@ -414,5 +413,5 @@ Release steps: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## License
 
-MIT for propwrap source — see [LICENSE](LICENSE).  
+MIT for propwrap source — see [LICENSE](https://github.com/shanthoshkv/propwrap/blob/main/LICENSE).  
 **RocketCEA** (GPL-family) and other third-party packages keep their own licenses. Installing this stack is not “all MIT.”
