@@ -62,7 +62,7 @@ propwrap = "propwrap.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/shanthoshkv/propwrap"
-Website = "https://cdn.jsdelivr.net/gh/shanthoshkv/propwrap@main/website/index.html"
+Website = "https://aboutkvs.vercel.app/propwrap.html"
 Repository = "https://github.com/shanthoshkv/propwrap"
 Issues = "https://github.com/shanthoshkv/propwrap/issues"
 Documentation = "https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md"
