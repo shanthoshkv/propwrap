@@ -9,40 +9,7 @@
 > **Numbers:** ideal theoretical CEA unless you apply efficiency factors. **Not flight-certified.**  
 > **Units:** public results in **SI** (Pa, K, m/s, kg/m³); Isp stays in **seconds** (rocketry standard) plus `ve` in m/s.
 
----
-
-## Project website
-
-**[https://aboutkvs.vercel.app/propwrap.html](https://aboutkvs.vercel.app/propwrap.html)** — full project site (overview, SI units, validation, install).
-
-Same page is also in the repo as [`website/index.html`](https://github.com/shanthoshkv/propwrap/blob/main/website/index.html) (and `website/propwrap.html`).
-
-Local preview from a clone:
-
-```bash
-python -m http.server 8080 --directory website
-# then http://localhost:8080
-```
-
----
-
-## Students & coursework
-
-| Start here | Link |
-|------------|------|
-| **Install (lab PCs)** | [docs/INSTALL.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/INSTALL.md) |
-| **How to use (beginner)** | [docs/how_to_use.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md) |
-| **Learning path** | [docs/learning/](https://github.com/shanthoshkv/propwrap/tree/main/docs/learning) |
-| **1-page cheat sheet** | [docs/cheat_sheet.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/cheat_sheet.md) |
-| **Sample lab assignment** | [docs/lab_assignment.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/lab_assignment.md) |
-| **Generate lab pack** | `propwrap homework kerolox --name YourName` |
-
-```bash
-propwrap homework kerolox --name YourName
-# → summary.md, assumptions.txt, CSV tables, PNG figures
-```
-
-Presets: `Case.student_lab()`, `Case.booster()`, `Case.upper_stage()`.
+Project site: **[aboutkvs.vercel.app/propwrap.html](https://aboutkvs.vercel.app/propwrap.html)** (mirrored in this repo at [`website/`](https://github.com/shanthoshkv/propwrap/tree/main/website), preview with `python -m http.server 8080 --directory website`).
 
 ---
 
@@ -212,6 +179,26 @@ propwrap clear-cache
 ```
 
 Add `--json` for machine-readable output.
+
+---
+
+## Students & coursework
+
+| Start here | Link |
+|------------|------|
+| **Install (lab PCs)** | [docs/INSTALL.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/INSTALL.md) |
+| **How to use (beginner)** | [docs/how_to_use.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md) |
+| **Learning path** | [docs/learning/](https://github.com/shanthoshkv/propwrap/tree/main/docs/learning) |
+| **1-page cheat sheet** | [docs/cheat_sheet.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/cheat_sheet.md) |
+| **Sample lab assignment** | [docs/lab_assignment.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/lab_assignment.md) |
+| **Generate lab pack** | `propwrap homework kerolox --name YourName` |
+
+```bash
+propwrap homework kerolox --name YourName
+# → summary.md, assumptions.txt, CSV tables, PNG figures
+```
+
+Presets: `Case.student_lab()`, `Case.booster()`, `Case.upper_stage()`.
 
 ---
 
