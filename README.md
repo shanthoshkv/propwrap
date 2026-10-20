@@ -4,8 +4,10 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/shanthoshkv/propwrap/blob/main/LICENSE)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanthoshkv/propwrap/blob/main/examples/quickstart.ipynb)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://shanthoshkv.github.io/propwrap/)
 
-> **Scope:** propellants and mixture performance — not full engine design (nozzles, injectors, cooling cycles).  
+> **Scope:** propellants and mixture performance, plus first-cut thrust sizing, altitude and throttle tables — not detailed engine design (nozzle contours, injectors, cooling cycles).  
 > **Numbers:** ideal theoretical CEA unless you apply efficiency factors. **Not flight-certified.**  
 > **Units:** public results in **SI** (Pa, K, m/s, kg/m³); Isp stays in **seconds** (rocketry standard) plus `ve` in m/s.
 
@@ -96,7 +98,7 @@ python -m venv .venv
 # Windows:  .venv\Scripts\activate
 # macOS / Linux: source .venv/bin/activate
 
-pip install propwrap
+pip install "propwrap[all]"   # core only: pip install propwrap
 ```
 
 Required dependencies (installed automatically): **rocketcea**, **cantera**, **pydantic≥2**, **matplotlib**, **numpy**.

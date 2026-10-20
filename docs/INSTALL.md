@@ -69,7 +69,7 @@ You should see `(.venv)` at the start of your prompt.
 
 ```bash
 python -m pip install --upgrade pip
-pip install propwrap
+pip install "propwrap[all]"   # core only: pip install propwrap
 ```
 
 This installs **propwrap** plus required dependencies:

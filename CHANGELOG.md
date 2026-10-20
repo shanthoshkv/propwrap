@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-10-20
+
+### Breaking
+
+- `cantera`, `matplotlib`, `pandas` are now optional. Plain `pip install propwrap` is core only; use `pip install "propwrap[all]"` for the previous behaviour. Missing extras raise a message naming the extra to install.
+
+### Added
+
+- `propwrap.engine`: `size_engine` / `PerformanceResult.size()` (mass flows, throat/exit diameters), `altitude_performance` + US Standard 1976 atmosphere, fixed-geometry `throttle` with separation flag
+- Plots: frozen-vs-shifting band, SL and delivered Isp on O/F sweep; Cf and Pe=Pamb / Summerfield markers on ε sweep; γ residual panel; `plot_isp_map`, `plot_species`, `plot_stations`, `plot_propellant_parallel`, `plot_altitude`; `set_theme("light")`; 300 dpi, vector output for .pdf/.svg
+- CLI: `map`, `altitude`, `throttle`, `info`, `doctor`; `run --thrust/--sea-level/--pamb/--stations`; `scan-of -j/--species/--xlsx/--pc-bar`; global `--theme`, `--config case.toml`
+- `workers=` for parallel sweeps; `Mixture.isp_map`; `SweepResult.to_dataframe/to_excel/plot_species`; Jupyter rich display; `cantera_backend.equilibrium_hp`
+- Cantera frozen-γ cross-check shown in summaries; mkdocs site; Colab quickstart notebook
+
+### Changed
+
+- CEA objects cached per propellant pair (faster sweeps); cache keys include propwrap/RocketCEA versions
+- `sweep_eps` / `sweep_of_ratio` accept `pc_pa=` / `pc_mpa=` as well as legacy `pc_bar`
+- Sanity warnings now suggest a fix; RocketCEA import banner and internal divide-by-zero warnings silenced
+- Legacy CLI aliases (`performance`, `trade`, `sweep`, `compare`, `list-propellants`) still work but are hidden from `--help`
+
 ## [0.1.3] — 2026-07-30
 
 ### Changed

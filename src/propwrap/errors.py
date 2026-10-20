@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from difflib import get_close_matches
+from typing import Any
 
 from propwrap.registry import list_registry
 
@@ -95,3 +96,15 @@ def suggest_propellant(name: str, *, kind: str = "fuel") -> str:
     if not name or not str(name).strip():
         raise PropwrapError(f"Empty {kind} name.{hint}")
     return name.strip()
+
+
+def require(module: str, extra: str) -> Any:
+    """Import an optional dependency or raise a friendly install hint."""
+    import importlib
+
+    try:
+        return importlib.import_module(module)
+    except ImportError as e:
+        raise ModuleNotFoundError(
+            f"{module} is not installed. Install it with: pip install \"propwrap[{extra}]\""
+        ) from e

@@ -1,0 +1,31 @@
+site_name: propwrap
+site_url: https://shanthoshkv.github.io/propwrap/
+repo_url: https://github.com/shanthoshkv/propwrap
+theme:
+  name: material
+  palette:
+    scheme: slate
+nav:
+  - Home: how_to_use.md
+  - Install: INSTALL.md
+  - Cheat sheet: cheat_sheet.md
+  - Colab: colab.md
+  - Learning:
+      - learning/README.md
+      - learning/01_units.md
+      - learning/02_frozen_vs_shifting.md
+      - learning/03_fair_propellant_trades.md
+      - learning/04_faq.md
+  - Validation: validation.md
+  - API reference: reference.md
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            members_order: source
+exclude_docs: |
+  report/

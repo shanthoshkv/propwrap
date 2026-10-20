@@ -63,3 +63,29 @@ def test_custom_propellant_registration() -> None:
         assert r.isp_vac_shifting > 100.0
     finally:
         clear_custom_propellants()
+
+
+def test_new_plots_and_grid(tmp_path: Path) -> None:
+    from propwrap import plotting
+    from propwrap.cantera_backend import equilibrium_hp
+
+    p = Propellant("RP-1", "LOX", cache_enabled=False)
+    sweep = p.sweep_of_ratio((2.2, 2.8, 0.3), pc_bar=70.0, eps=20.0)
+    eps_sweep = p.sweep_eps(2.56, 70.0, (5.0, 60.0, 5.0), workers=2)
+    assert [r.eps for r in eps_sweep.results] == eps_sweep.values
+    ofs, pcs, grid = p.isp_map((2.2, 2.8, 0.3), (50.0, 100.0, 50.0), 20.0)
+    assert len(grid) == len(pcs) and len(grid[0]) == len(ofs)
+    plotting.set_theme("light")
+    try:
+        for fig in (
+            plotting.plot_eps_sweep(eps_sweep),
+            plotting.plot_species(sweep),
+            plotting.plot_stations(sweep.results[0]),
+            plotting.plot_isp_map(ofs, pcs, grid, save_path=str(tmp_path / "m.pdf")),
+            plotting.plot_propellant_parallel(sweep.results, ["a", "b", "c"]),
+        ):
+            assert fig.axes
+    finally:
+        plotting.set_theme("dark")
+    tc, mw = equilibrium_hp("CH4", "O2", 3.4, 7e6)
+    assert 3000 < tc < 4000 and 15 < mw < 30

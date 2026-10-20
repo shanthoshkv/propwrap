@@ -28,6 +28,16 @@ from propwrap.registry import get_propellant
 from propwrap.sanity import sanity_check
 from propwrap.sweeps import expand_range
 
+
+def _worker_tmpdir(parent: str) -> None:
+    """Give each pool worker its own RocketCEA data dir — shared f.inp/f.out would collide."""
+    import tempfile
+
+    import rocketcea.cea_obj  # already imported (silently) by propwrap/__init__
+
+    rocketcea.cea_obj.ROCKETCEA_DATA_DIR = tempfile.mkdtemp(dir=parent)
+    cea_backend._make_cea_obj.cache_clear()  # forked workers inherit parent's objects
+
 # re-export old name used internally
 EngineCase = MixtureStudy
 
@@ -260,6 +270,55 @@ class Mixture:
             cache.set(key, result)
         return result
 
+    def _compute_many(
+        self,
+        ofs: list[float],
+        pcs: list[float],
+        epss: list[float],
+        workers: int = 1,
+    ) -> list[PerformanceResult]:
+        """Evaluate many points; ``workers > 1`` uses processes (CEA Fortran is not thread-safe)."""
+        if workers <= 1:
+            return [self._compute(*p) for p in zip(ofs, pcs, epss)]
+        import tempfile
+        from concurrent.futures import ProcessPoolExecutor
+
+        with tempfile.TemporaryDirectory(prefix="propwrap_cea_", ignore_cleanup_errors=True) as tmp:
+            with ProcessPoolExecutor(workers, initializer=_worker_tmpdir, initargs=(tmp,)) as ex:
+                return list(ex.map(self._compute, ofs, pcs, epss))
+
+    def isp_map(
+        self,
+        of_range: tuple[float, float, float],
+        pc_range: tuple[float, float, float],
+        eps: float,
+        *,
+        unit: str = "bar",
+        workers: int = 1,
+        plot: bool = False,
+        save: str | None = None,
+        show: bool = False,
+    ) -> tuple[list[float], list[float], list[list[float]]]:
+        """Vacuum Isp over an O/F × Pc grid → ``(of_values, pc_pa_values, isp[pc][of])``."""
+        from propwrap.units import pressure_to_pa
+
+        ofs = expand_range(of_range)
+        pcs = [pressure_to_pa(v, unit) for v in expand_range(pc_range)]
+        flat = self._compute_many(
+            ofs * len(pcs), [p for p in pcs for _ in ofs], [eps] * (len(ofs) * len(pcs)), workers
+        )
+        grid = [
+            [r.isp_vac_shifting for r in flat[i * len(ofs) : (i + 1) * len(ofs)]]
+            for i in range(len(pcs))
+        ]
+        if plot or save:
+            from propwrap.plotting import plot_isp_map
+
+            fig = plot_isp_map(ofs, pcs, grid, save_path=save)
+            maybe_show(fig, show)
+            maybe_close(fig, show)
+        return ofs, pcs, grid
+
     def scan_of(
         self,
         of_range: tuple[float, float, float] | None = None,
@@ -274,6 +333,7 @@ class Mixture:
         save: str | None = None,
         show: bool = False,
         verbose: bool = False,
+        workers: int = 1,
     ) -> SweepResult:
         """Scan mixture ratio (O/F). Alias: ``scan_mixture_ratio``, ``sweep_of_ratio``."""
         pc_v, eps_v = resolve_pc_eps(
@@ -291,7 +351,8 @@ class Mixture:
 
             of_range = _default_range_for(self.fuel, self.oxidizer, (1.8, 3.5, 0.1))
         values = expand_range(of_range)
-        results = [self._compute(v, pc_v, eps_v) for v in values]
+        n = len(values)
+        results = self._compute_many(values, [pc_v] * n, [eps_v] * n, workers)
         sweep = SweepResult(
             sweep_variable="of_ratio",
             values=values,
@@ -310,11 +371,17 @@ class Mixture:
     def sweep_of_ratio(
         self,
         of_range: tuple[float, float, float],
-        pc_bar: float,
-        eps: float,
+        pc_bar: float | None = None,
+        eps: float | None = None,
+        *,
+        pc_pa: float | None = None,
+        pc_mpa: float | None = None,
+        workers: int = 1,
     ) -> SweepResult:
-        """Legacy: ``pc_bar`` in bar."""
-        return self.scan_of(of_range, pc_bar=pc_bar, eps=eps)
+        """O/F sweep. Pressure via ``pc_bar`` (positional, legacy), ``pc_pa`` or ``pc_mpa``."""
+        return self.scan_of(
+            of_range, pc_bar=pc_bar, pc_pa=pc_pa, pc_mpa=pc_mpa, eps=eps, workers=workers
+        )
 
     def sweep_pc(
         self,
@@ -326,13 +393,15 @@ class Mixture:
         save: str | None = None,
         show: bool = False,
         unit: str = "bar",
+        workers: int = 1,
     ) -> SweepResult:
         """Sweep chamber pressure. ``pc_range`` in ``unit`` (default bar for legacy)."""
         from propwrap.units import pressure_to_pa
 
         values_in = expand_range(pc_range)
         values_pa = [pressure_to_pa(v, unit) for v in values_in]
-        results = [self._compute(of_ratio, v, eps) for v in values_pa]
+        n = len(values_pa)
+        results = self._compute_many([of_ratio] * n, values_pa, [eps] * n, workers)
         sweep = SweepResult(sweep_variable="pc_pa", values=values_pa, results=results)
         if plot or save:
             sweep.plot(save=save, show=show)
@@ -341,19 +410,25 @@ class Mixture:
     def sweep_eps(
         self,
         of_ratio: float,
-        pc_bar: float,
-        eps_range: tuple[float, float, float],
+        pc_bar: float | None = None,
+        eps_range: tuple[float, float, float] | None = None,
         *,
+        pc_pa: float | None = None,
+        pc_mpa: float | None = None,
         plot: bool = False,
         save: str | None = None,
         show: bool = False,
+        workers: int = 1,
     ) -> SweepResult:
-        """Legacy: ``pc_bar`` in bar."""
-        from propwrap.units import bar_to_pa
+        """Area-ratio sweep. Pressure via ``pc_bar`` (positional, legacy), ``pc_pa`` or ``pc_mpa``."""
+        from propwrap.units import resolve_pressure_pa
 
-        pc_pa = bar_to_pa(pc_bar)
+        if eps_range is None:
+            raise PropwrapError("eps_range=(start, stop, step) is required")
+        pc_pa = resolve_pressure_pa(pc_pa=pc_pa, pc_bar=pc_bar, pc_mpa=pc_mpa)
         values = expand_range(eps_range)
-        results = [self._compute(of_ratio, pc_pa, v) for v in values]
+        n = len(values)
+        results = self._compute_many([of_ratio] * n, [pc_pa] * n, values, workers)
         sweep = SweepResult(sweep_variable="eps", values=values, results=results)
         if plot or save:
             sweep.plot(save=save, show=show)
@@ -564,6 +639,8 @@ class Mixture:
             self.fuel_temp_k,
             self.ox_temp_k,
             frozen=frozen,
+            eta_cstar=self.eta_cstar,
+            eta_cf=self.eta_cf,
         )
 
     def cross_validate(

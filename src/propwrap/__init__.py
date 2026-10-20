@@ -10,6 +10,13 @@ Quick start
 >>> characterize("CH4", "LOX", of=3.0, pc_bar=100, plot=False)
 """
 
+import contextlib as _contextlib
+import io as _io
+
+with _contextlib.redirect_stdout(_io.StringIO()):
+    import rocketcea.cea_obj  # noqa: F401  — import once, silencing its USER_HOME_DIR banner
+
+from propwrap.engine import altitude_performance, size_engine, throttle, us1976_pressure
 from propwrap.blends import BlendComponent, add_blend, blend_card_summary
 from propwrap.defaults import Case, get_defaults, reset_defaults, set_defaults
 from propwrap.models import (
@@ -62,9 +69,7 @@ def _package_version() -> str:
 
         return version("propwrap")
     except PackageNotFoundError:
-        return "0.1.3"
-    except Exception:
-        return "0.1.3"
+        return "0.2.0"
 
 
 __version__ = _package_version()
@@ -95,6 +100,11 @@ __all__ = [
     "BlendComponent",
     "blend_card_summary",
     "add_custom_propellant",
+    # engine
+    "size_engine",
+    "altitude_performance",
+    "throttle",
+    "us1976_pressure",
     # trades / reports
     "density_isp_curve",
     "trade_at_optimum_of",
@@ -119,3 +129,8 @@ __all__ = [
     "convert",
     "__version__",
 ]
+
+
+def __dir__() -> list[str]:
+    """Tab-completion shows the public API only, not internal submodules."""
+    return sorted(__all__)
