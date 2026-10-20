@@ -431,17 +431,61 @@
       .stats-row { grid-template-columns:1fr 1fr; }
       .footer-band { padding:32px 20px; flex-direction:column; }
     }
+
+    /* ─── v0.2 additions ─── */
+    .hero-shot { max-width:1280px; margin:-30px auto 0; padding:0 40px 20px; position:relative; z-index:2; }
+    .hero-shot figure { border:1px solid var(--border2); border-radius:var(--r3); overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 90px var(--fire-glow); background:#0a0a0a; }
+    .hero-shot img { display:block; width:100%; height:auto; cursor:zoom-in; }
+    .hero-shot figcaption { font-family:var(--font-mono); font-size:.66rem; color:var(--muted); padding:12px 20px;
+      border-top:1px solid var(--border); letter-spacing:.05em; }
+    .gal { display:grid; grid-template-columns:repeat(6,1fr); gap:22px; }
+    .gal figure { grid-column:span 3; background:var(--panel); border:1px solid var(--border); border-radius:var(--r2);
+      overflow:hidden; transition:transform .25s, border-color .25s, box-shadow .25s; display:flex; flex-direction:column; }
+    .gal figure.wide { grid-column:span 6; }
+    .gal figure:hover { transform:translateY(-4px); border-color:rgba(255,107,26,.45); box-shadow:0 18px 50px rgba(255,107,26,.12); }
+    .gal img { width:100%; height:auto; display:block; cursor:zoom-in; background:#0a0a0a; }
+    .gal figcaption { padding:16px 20px 20px; font-size:.84rem; color:var(--off); line-height:1.55; }
+    .gal figcaption b { display:block; font-family:var(--font-head); font-size:1.25rem; letter-spacing:.06em; color:var(--white); font-weight:400; margin-bottom:2px; }
+    .gal figcaption code { display:block; margin-top:10px; font-family:var(--font-mono); font-size:.68rem; color:var(--fire2);
+      background:var(--void); border:1px solid var(--border); border-radius:6px; padding:8px 10px; overflow-x:auto; white-space:pre; }
+    .eng-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-bottom:40px; }
+    .eng-card { background:var(--panel); border:1px solid var(--border); border-radius:var(--r2); padding:28px 26px; transition:border-color .25s, transform .25s; }
+    .eng-card:hover { border-color:rgba(168,216,255,.35); transform:translateY(-3px); }
+    .eng-card h3 { font-family:var(--font-head); font-weight:400; font-size:1.5rem; letter-spacing:.07em; color:var(--white); margin:6px 0 8px; }
+    .eng-card p { font-size:.86rem; color:var(--muted); }
+    .eng-card .big { font-family:var(--font-head); font-size:2.6rem; color:var(--fire); line-height:1; margin:14px 0 2px; }
+    .eng-card .big small { font-size:1rem; color:var(--muted); letter-spacing:.08em; }
+    .cli-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:.76rem; }
+    .cli-table td { padding:11px 16px; border-bottom:1px solid var(--border); vertical-align:top; }
+    .cli-table td:first-child { color:var(--fire2); }
+    .cli-table td:last-child { color:var(--off); font-family:var(--font-ui); font-size:.85rem; }
+    .cli-table tr:hover td { background:var(--fire-dim); }
+    .rv { opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease; }
+    .rv.in { opacity:1; transform:none; }
+    .lb { position:fixed; inset:0; z-index:500; background:rgba(2,2,10,.94); display:none; align-items:center; justify-content:center; padding:30px; cursor:zoom-out; }
+    .lb.open { display:flex; }
+    .lb img { max-width:100%; max-height:100%; border-radius:10px; box-shadow:0 0 80px var(--fire-glow); }
+    @media (max-width:900px) {
+      .gal figure { grid-column:span 6; }
+      .eng-grid { grid-template-columns:1fr; }
+      .hero-shot { padding:0 16px 10px; }
+      .cli-table td:first-child { white-space:normal; word-break:break-all; }
+    }
+    @media (prefers-reduced-motion:reduce) { .rv { opacity:1; transform:none; transition:none; } }
   </style>
 </head>
 <body>
 
 <nav>
   <div class="nav-inner">
-    <a class="nav-logo" href="#top">PROP<span>WRAP</span><span class="nav-badge">v0.1.2</span></a>
+    <a class="nav-logo" href="#top">PROP<span>WRAP</span><span class="nav-badge">v0.2.0</span></a>
     <ul class="nav-links">
       <li><a href="#about">About</a></li>
       <li><a href="#why">Why</a></li>
       <li><a href="#features">Features</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#engine">Engine</a></li>
       <li><a href="#physics">Physics</a></li>
       <li><a href="#validation">Validation</a></li>
       <li><a href="#students">Students</a></li>
@@ -457,6 +501,8 @@
   <a href="#about">About</a>
   <a href="#why">Why</a>
   <a href="#features">Features</a>
+  <a href="#gallery">Gallery</a>
+  <a href="#engine">Engine</a>
   <a href="#physics">Physics</a>
   <a href="#validation">Validation</a>
   <a href="#students">Students</a>
@@ -516,6 +562,13 @@
   </div>
 </section>
 
+<div class="hero-shot rv">
+  <figure>
+    <img src="img/isp_map.png" alt="Vacuum Isp contour over O/F and chamber pressure for RP-1/LOX" loading="eager"/>
+    <figcaption>Generated by propwrap · RP-1/LOX · m.isp_map((1.8,3.6,0.1), (20,200,10), 20, workers=4) — vacuum Isp over O/F × Pc, optimum ridge dashed</figcaption>
+  </figure>
+</div>
+
 <div class="divider"></div>
 
 <!-- STATS -->
@@ -523,7 +576,7 @@
   <div class="section-inner">
     <div class="stats-row">
       <div class="stat-item">
-        <div class="stat-num">132<span>+</span></div>
+        <div class="stat-num">140<span>+</span></div>
         <div class="stat-label">pytest cases</div>
       </div>
       <div class="stat-item">
@@ -743,6 +796,128 @@
 
 <div class="divider"></div>
 
+<!-- GALLERY -->
+<section class="section s-void" id="gallery">
+  <div class="section-inner">
+    <div class="sh rv">
+      <div class="sh-label">Output</div>
+      <h2>EVERY FIGURE BELOW CAME <em>OUT OF THE LIBRARY</em></h2>
+      <p>One call each, dark theme by default (<code>--theme light</code> for print). 300 dpi PNG. Click any image to enlarge.
+         All cases: RP-1/LOX, Pc = 70 bar, LOX at 90 K unless stated.</p>
+    </div>
+    <div class="gal">
+      <figure class="wide rv"><img src="img/of_sweep.png" alt="O/F sweep" loading="lazy"/>
+        <figcaption><b>O/F sweep</b>Shifting vs frozen Isp (shaded gap = equilibrium gain), sea-level Isp, Tc on a twin axis, stoichiometric line and optimum marked.
+        <code>m.scan_of((1.8, 3.6, 0.1), pc_bar=70, eps=20).plot(save="of_sweep.png")</code></figcaption></figure>
+      <figure class="rv"><img src="img/eps_sweep.png" alt="Area ratio sweep" loading="lazy"/>
+        <figcaption><b>Area-ratio sweep</b>Isp and Cf, vacuum and sea level, with Pe = Pamb and separation markers.
+        <code>m.sweep_eps(2.56, 70, (2, 60, 2)).plot()</code></figcaption></figure>
+      <figure class="rv"><img src="img/altitude.png" alt="Isp vs altitude" loading="lazy"/>
+        <figcaption><b>Isp vs altitude</b>Fixed nozzle flown through the US Standard 1976 atmosphere.
+        <code>altitude_performance(m, 2.56, 7e6, 20, alts)</code></figcaption></figure>
+      <figure class="rv"><img src="img/pc_sweep.png" alt="Chamber pressure sweep" loading="lazy"/>
+        <figcaption><b>Chamber-pressure sweep</b>Diminishing returns of Pc on Isp and c* at fixed O/F and ε.
+        <code>m.sweep_pc(2.56, (10, 250, 10), 20).plot()</code></figcaption></figure>
+      <figure class="rv"><img src="img/species.png" alt="Species mole fractions vs O/F" loading="lazy"/>
+        <figcaption><b>Species vs O/F</b>Top combustion products by mole fraction across the sweep.
+        <code>sweep.plot_species(station="chamber")</code></figcaption></figure>
+      <figure class="wide rv"><img src="img/compare.png" alt="Propellant comparison" loading="lazy"/>
+        <figcaption><b>Fair propellant trade</b>Each pair at its own optimum O/F: Isp, rho*Isp, Tc, c*.
+        <code>compare_propellants(["RP-1/LOX","CH4/LOX","LH2/LOX","MMH/N2O4"], pc_bar=70, eps=40)</code></figcaption></figure>
+      <figure class="wide rv"><img src="img/stations.png" alt="Chamber, throat and exit station properties" loading="lazy"/>
+        <figcaption><b>Station properties</b>T, P, γ and molar mass at chamber, throat and exit from one evaluation.
+        <code>m.evaluate(of=2.56, pc_bar=70, eps=20).plot_stations()</code></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ENGINE -->
+<section class="section s-deep" id="engine">
+  <div class="section-inner">
+    <div class="sh rv">
+      <div class="sh-label">New in 0.2.0</div>
+      <h2>FROM PROPELLANT TO <em>HARDWARE NUMBERS</em></h2>
+      <p>Thrust in, geometry out. First-principles on top of the CEA result, no hidden fudge factors.</p>
+    </div>
+    <div class="eng-grid">
+      <div class="eng-card rv">
+        <span class="card-tag">size_engine</span>
+        <h3>THRUST SIZING</h3>
+        <p>1 MN sea-level, RP-1/LOX, 70 bar, ε = 20, O/F 2.56:</p>
+        <div class="big">339 <small>mm throat</small></div>
+        <p style="margin-top:10px;">ṁ = 351 kg/s (252 ox / 99 fuel) · exit diameter 1.52 m · Isp<sub>SL</sub> 290.6 s</p>
+      </div>
+      <div class="eng-card rv">
+        <span class="card-tag">altitude_performance</span>
+        <h3>ALTITUDE CURVE</h3>
+        <p>US Standard Atmosphere 1976, seven layers. Fixed nozzle, fixed Pc.</p>
+        <div class="big">290 → 344 <small>s</small></div>
+        <p style="margin-top:10px;">Sea level to vacuum, Pe/Pamb tracked at each altitude.</p>
+      </div>
+      <div class="eng-card rv">
+        <span class="card-tag">throttle</span>
+        <h3>THROTTLING</h3>
+        <p>Throat fixed at design, Pc scaled. Flags Summerfield separation (Pe/Pamb &lt; 0.4).</p>
+        <div class="big">90% <small>Pc: flagged</small></div>
+        <p style="margin-top:10px;">This ε = 20 nozzle sits at Pe/Pamb 0.41 at 100%, so any throttling at sea level crosses the line.</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="code-block rv">
+        <div class="term-bar"><div class="tdot td-r"></div><div class="tdot td-a"></div><div class="tdot td-g"></div><span class="term-name">python</span></div>
+        <pre><span class="tc">r = m.evaluate(of=</span><span class="tv">2.56</span><span class="tc">, pc_bar=</span><span class="tv">70</span><span class="tc">, eps=</span><span class="tv">20</span><span class="tc">)</span>
+<span class="tc">r.size(</span><span class="tv">1e6</span><span class="tc">, sea_level=</span><span class="tv">True</span><span class="tc">)</span>
+<span class="tco"># {'mdot_kg_s': 350.9, 'throat_diameter_m': 0.339,</span>
+<span class="tco">#  'exit_diameter_m': 1.515, 'isp_s': 290.6, ...}</span>
+
+<span class="tc">from propwrap import throttle</span>
+<span class="tc">throttle(m, </span><span class="tv">2.56</span><span class="tc">, </span><span class="tv">7e6</span><span class="tc">, </span><span class="tv">20</span><span class="tc">, </span><span class="tv">1e6</span><span class="tc">)</span>
+<span class="tco"># 70% Pc -> 649 kN, Isp 268 s, Pe/Pamb 0.29</span></pre>
+      </div>
+      <div class="code-block rv">
+        <div class="term-bar"><div class="tdot td-r"></div><div class="tdot td-a"></div><div class="tdot td-g"></div><span class="term-name">other upgrades</span></div>
+        <pre><span class="tc">m.isp_map(..., workers=</span><span class="tv">4</span><span class="tc">)</span>   <span class="tco"># parallel O/F x Pc grid</span>
+<span class="tc">sweep.to_dataframe()</span>        <span class="tco"># pandas</span>
+<span class="tc">sweep.to_excel(</span><span class="tv">"scan.xlsx"</span><span class="tc">)</span>  <span class="tco"># warnings included</span>
+<span class="tc">r.gamma_frozen_cantera()</span>   <span class="tco"># Cantera cross-check</span>
+<span class="tc">set_theme(</span><span class="tv">"light"</span><span class="tc">)</span>          <span class="tco"># print-ready plots</span>
+<span class="tco"># results render as tables in Jupyter</span>
+<span class="tco"># cache keyed by library versions</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CLI -->
+<section class="section s-void" id="cli">
+  <div class="section-inner">
+    <div class="sh rv">
+      <div class="sh-label">Command line</div>
+      <h2>EVERYTHING FROM <em>THE TERMINAL</em></h2>
+      <p><code>pip install "propwrap[all]"</code>, then <code>propwrap doctor</code> checks the install and runs one sample point.</p>
+    </div>
+    <div class="pipe-box rv">
+      <table class="cli-table">
+        <tr><td>propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20 --thrust 1e6 --sea-level</td><td>Point performance plus engine sizing</td></tr>
+        <tr><td>propwrap scan-of RP-1 LOX --pc-bar 70 -j 4 --xlsx out.xlsx</td><td>O/F sweep, parallel, Excel export</td></tr>
+        <tr><td>propwrap map RP-1 LOX</td><td>O/F × Pc Isp contour map</td></tr>
+        <tr><td>propwrap altitude · propwrap throttle</td><td>Isp vs altitude · fixed-geometry throttle table</td></tr>
+        <tr><td>propwrap compare · propwrap trade</td><td>Fair multi-propellant comparison at each optimum O/F</td></tr>
+        <tr><td>propwrap info CH4</td><td>Propellant properties and stoichiometric O/F with LOX</td></tr>
+        <tr><td>propwrap doctor</td><td>Dependency, data-folder and smoke-test check</td></tr>
+        <tr><td>--theme light · --config case.toml</td><td>Global: print-ready plots · reusable case files</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
 <!-- PHYSICS -->
 <section class="section s-deep" id="physics">
   <div class="section-inner">
@@ -947,7 +1122,7 @@
     <div class="sh">
       <div class="sh-label">Usage</div>
       <h2>MINIMAL <em>PATH</em></h2>
-      <p>Python 3.10+ (3.11 / 3.12 fine). Windows, Linux, or macOS. Cantera and matplotlib install with the package.</p>
+      <p>Python 3.10+ (3.11 / 3.12 fine). Windows, Linux, or macOS. Core install is light; add extras as needed: <code>propwrap[plot]</code>, <code>[cantera]</code>, <code>[excel]</code> or <code>[all]</code>.</p>
     </div>
 
     <div class="two-col">
@@ -959,7 +1134,7 @@
         <pre><span class="tp">$</span> <span class="tc">python -m venv .venv</span>
 <span class="tco"># Windows:  .venv\Scripts\activate</span>
 <span class="tco"># macOS/Linux: source .venv/bin/activate</span>
-<span class="tp">$</span> <span class="tc">pip install propwrap</span>
+<span class="tp">$</span> <span class="tc">pip install "propwrap[all]"</span>
 <span class="tp">$</span> <span class="tc">propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20</span>
 <span class="tco"># from source: pip install -e ".[dev]"</span></pre>
       </div>
@@ -1027,28 +1202,28 @@
 </section>
 
 <footer>
-  <div class="footer-band">
-    <div>
-      <div class="footer-logo">PROP<span>WRAP</span></div>
-      <p class="footer-copy" style="margin-top:10px;">
-        MIT · independent open source<br/>
-        Built on NASA CEA (RocketCEA) and optional Cantera
-      </p>
-    </div>
-    <ul class="footer-nav">
-      <li><a href="#about">About</a></li>
-      <li><a href="#validation">Validation</a></li>
-      <li><a href="#start">Start</a></li>
-      <li><a href="https://github.com/shanthoshkv/propwrap" target="_blank" rel="noopener">GitHub</a></li>
-    </ul>
-    <p class="footer-copy">
-      Not affiliated with ISRO, DRDO, NAL, HAL, or NASA<br/>
-      <a href="https://github.com/shanthoshkv/propwrap" style="color:var(--muted);">github.com/shanthoshkv/propwrap</a>
-    </p>
+  <div class="footer-band" style="justify-content:center;text-align:center;">
+    <p class="footer-copy">© 2026 Shanthosh KV · All rights reserved</p>
   </div>
 </footer>
 
+<div class="lb" id="lb"><img alt=""/></div>
 <script>
+(function () {
+  var lb = document.getElementById('lb'), lbi = lb.querySelector('img');
+  document.querySelectorAll('.gal img, .hero-shot img').forEach(function (i) {
+    i.addEventListener('click', function () { lbi.src = i.src; lb.classList.add('open'); });
+  });
+  lb.addEventListener('click', function () { lb.classList.remove('open'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') lb.classList.remove('open'); });
+  var els = document.querySelectorAll('.rv');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    els.forEach(function (e) { io.observe(e); });
+  } else els.forEach(function (e) { e.classList.add('in'); });
+})();
 (function () {
   // mobile menu
   var btn = document.getElementById('menuBtn');

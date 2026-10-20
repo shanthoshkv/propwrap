@@ -124,10 +124,12 @@ def _annotate_optimum(
     ax.annotate(
         label,
         xy=(x, y),
-        xytext=(8, 10),
+        xytext=(12, -30),
         textcoords="offset points",
         color=SECONDARY,
         fontsize=8,
+        bbox={"boxstyle": "round,pad=0.3", "fc": BG, "ec": SECONDARY, "lw": 0.6},
+        arrowprops={"arrowstyle": "-", "color": SECONDARY, "lw": 0.6},
         fontfamily=_resolve_font(("DM Mono", "DejaVu Sans Mono"), "DejaVu Sans Mono"),
     )
 
@@ -443,6 +445,7 @@ def plot_isp_map(
     apply_dark_theme(fig, ax)
     cs = ax.contourf(of_values, pcs, isp_grid, levels=20, cmap="viridis")
     ax.contour(of_values, pcs, isp_grid, levels=10, colors=BG, linewidths=0.4)
+    ax.grid(False)
     cb = fig.colorbar(cs, ax=ax)
     cb.set_label("Isp vac [s]", color=FG)
     cb.ax.tick_params(colors=FG)
