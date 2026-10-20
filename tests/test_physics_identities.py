@@ -137,3 +137,29 @@ def test_bulk_density_and_density_impulse_positive() -> None:
 def test_standard_g0_value() -> None:
     """g0 must remain standard gravity 9.80665 m/s² (CGPM / BIPM convention)."""
     assert G0 == 9.80665
+
+
+def test_frozen_profile_differs_from_shifting():
+    from propwrap.cea_backend import nozzle_profile
+
+    f = nozzle_profile("RP-1", "LOX", 2.4, 68.9e5, [20.0], frozen=True)
+    s = nozzle_profile("RP-1", "LOX", 2.4, 68.9e5, [20.0], frozen=False)
+    assert f.gamma_cea[0] > s.gamma_cea[0]
+    assert f.pressure_pa[0] < s.pressure_pa[0]
+
+
+def test_no_spurious_warning_with_efficiencies():
+    from propwrap.cea_backend import compute_performance
+
+    r = compute_performance("RP-1", "LOX", 2.4, 68.9e5, 20.0, eta_cstar=0.95, eta_cf=0.97)
+    assert not any("cf_vac" in w for w in r.warnings)
+
+
+def test_ambient_isp_and_delivered_ve_scale_with_eta():
+    from propwrap.cea_backend import ambient_isp, compute_performance
+
+    a = ambient_isp("RP-1", "LOX", 2.4, 68.9e5, 20.0, 101325.0)
+    b = ambient_isp("RP-1", "LOX", 2.4, 68.9e5, 20.0, 101325.0, eta_cstar=0.95, eta_cf=0.97)
+    assert abs(b["isp_s"] / a["isp_s"] - 0.95 * 0.97) < 1e-9
+    r = compute_performance("RP-1", "LOX", 2.4, 68.9e5, 20.0, eta_cstar=0.95, eta_cf=0.97)
+    assert abs(r.ve_vac_delivered / r.ve_vac_shifting - 0.95 * 0.97) < 1e-9

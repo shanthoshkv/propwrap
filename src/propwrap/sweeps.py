@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 
 def expand_range(rng: tuple[float, float, float]) -> list[float]:
     """Expand ``(start, stop, step)`` into a list of sample values.
@@ -27,20 +29,8 @@ def expand_range(rng: tuple[float, float, float]) -> list[float]:
     if step <= 0:
         raise ValueError(f"step must be > 0, got {step}")
 
-    values: list[float] = []
-    # Use integer steps to avoid float drift
-    n = int(round((stop - start) / step))
-    for i in range(n + 1):
-        v = start + i * step
-        if v > stop + step * 1e-9:
-            break
-        values.append(round(v, 12))
-
-    # Ensure stop included if very close
-    if values and abs(values[-1] - stop) > max(1e-9, abs(step) * 1e-6):
-        if values[-1] < stop:
-            values.append(round(stop, 12))
-
-    if not values:
-        raise ValueError(f"range {rng} produced no samples")
+    n = int(np.floor((stop - start) / step + 1e-9))
+    values: list[float] = np.round(start + step * np.arange(n + 1), 12).tolist()
+    if stop - values[-1] > max(1e-9, step * 1e-6):
+        values.append(round(stop, 12))
     return values

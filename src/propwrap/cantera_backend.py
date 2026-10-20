@@ -1,86 +1,58 @@
 """Cantera / NASA-9 polynomial thermo for frozen γ cross-checks.
 
-CEA and Cantera do not share an identical species set. We map major combustion
-products into a Cantera ideal-gas phase (gri30 or nasa_gas when available) and
+CEA and Cantera do not share an identical species set. We look CEA product
+names up directly in a Cantera ideal-gas phase (nasa_gas or gri30) and
 evaluate frozen γ = cp/cv at the CEA temperature and pressure.
 """
 
 from __future__ import annotations
 
+import warnings
+from functools import lru_cache
 from typing import Any
 
-import cantera as ct
-
-# CEA / common rocket species → Cantera gri30-style names
-_SPECIES_MAP: dict[str, str] = {
-    "CO2": "CO2",
-    "CO": "CO",
-    "H2O": "H2O",
-    "H2": "H2",
-    "O2": "O2",
-    "OH": "OH",
-    "H": "H",
-    "O": "O",
-    "N2": "N2",
-    "NO": "NO",
-    "NO2": "NO2",
-    "N": "N",
-    "NH3": "NH3",
-    "CH4": "CH4",
-    "C2H2": "C2H2",
-    "C2H4": "C2H4",
-    "AR": "AR",
-    "Ar": "AR",
-    "HO2": "HO2",
-    "H2O2": "H2O2",
-    # condensed / solid markers from CEA — skip
-    "*C(gr)": "",
-    "C(gr)": "",
-    "*AL2O3(L)": "",
-    "AL2O3(L)": "",
-}
+_ALIASES = {"Ar": "AR"}
 
 
+@lru_cache(maxsize=1)
 def _get_solution() -> Any:
     """Load a Cantera Solution suitable for high-T product thermo."""
-    for name in ("nasa_gas.yaml", "gri30.yaml", "h2o2.yaml"):
+    from propwrap.errors import require
+
+    ct = require("cantera", "cantera")
+    for name in ("nasa_gas.yaml", "gri30.yaml"):
         try:
             return ct.Solution(name)
-        except Exception:
+        except ct.CanteraError:
             continue
-    # Last resort: pure air-like — still allows γ at T if composition set fails
-    return ct.Solution("gri30.yaml")
+    return ct.Solution("h2o2.yaml")
 
 
 def map_species(species_mole_fractions: dict[str, float]) -> dict[str, float]:
-    """Map CEA species names to Cantera names; drop unmapped; renormalize."""
+    """Map CEA species names onto the Cantera phase; drop unknown; renormalize.
+
+    Condensed species (``(L)``, ``(S)``, ``(gr)``) are dropped with a warning
+    when they carry > 0.1 % of the mixture — γ is then gas-phase only.
+    """
+    names = set(_get_solution().species_names)
     mapped: dict[str, float] = {}
+    condensed = 0.0
     for name, x in species_mole_fractions.items():
-        # strip asterisks / phase markers
         clean = name.strip().lstrip("*")
-        # drop condensed phase markers like (L), (S), (gr)
-        base = clean.split("(")[0]
-        ct_name = _SPECIES_MAP.get(name) or _SPECIES_MAP.get(clean) or _SPECIES_MAP.get(base)
-        if not ct_name:
-            # try exact base if present in map keys via upper
-            ct_name = _SPECIES_MAP.get(base.upper(), "")
-            if not ct_name and base.upper() in {
-                "CO2",
-                "CO",
-                "H2O",
-                "H2",
-                "O2",
-                "OH",
-                "N2",
-                "NO",
-                "H",
-                "O",
-                "N",
-            }:
-                ct_name = base.upper() if base.upper() != "AR" else "AR"
-        if ct_name and x > 0:
+        if "(" in clean:
+            condensed += float(x)
+            continue
+        ct_name = _ALIASES.get(clean, clean)
+        if ct_name not in names:
+            ct_name = clean.upper()
+        if ct_name in names and x > 0:
             mapped[ct_name] = mapped.get(ct_name, 0.0) + float(x)
 
+    if condensed > 1e-3:
+        warnings.warn(
+            f"Cantera γ ignores condensed species (mole fraction {condensed:.3f})",
+            stacklevel=2,
+        )
     total = sum(mapped.values())
     if total <= 0:
         return {}
@@ -110,30 +82,17 @@ def gamma_frozen(
             raise ValueError("P_pa (or P_bar) required")
 
     mapped = map_species(species_mole_fractions)
-    gas = _get_solution()
-
     if not mapped:
         if fallback_gamma is not None:
             return float(fallback_gamma)
         raise ValueError("No mappable species for Cantera γ evaluation")
 
-    species_in_phase = {s: x for s, x in mapped.items() if s in gas.species_names}
-    if not species_in_phase:
-        if fallback_gamma is not None:
-            return float(fallback_gamma)
-        raise ValueError(
-            f"None of {list(mapped)} exist in Cantera phase {gas.name}"
-        )
-    total = sum(species_in_phase.values())
-    species_in_phase = {k: v / total for k, v in species_in_phase.items()}
-
-    gas.TPX = T_k, float(P_pa), species_in_phase
-    # Frozen γ
-    cp = gas.cp_mass
+    gas = _get_solution()
+    gas.TPX = T_k, float(P_pa), mapped
     cv = gas.cv_mass
     if cv <= 0:
         raise RuntimeError("Cantera returned non-positive cv")
-    return float(cp / cv)
+    return float(gas.cp_mass / cv)
 
 
 def gamma_from_cea_chamber(
@@ -146,3 +105,25 @@ def gamma_from_cea_chamber(
     return gamma_frozen(
         T_k, P_pa, species_mole_fractions, fallback_gamma=cea_gamma
     )
+
+
+def equilibrium_hp(
+    fuel_species: str,
+    ox_species: str,
+    of_ratio: float,
+    P_pa: float,
+    T0_k: float = 298.15,
+) -> tuple[float, float]:
+    """Independent adiabatic (HP) equilibrium: return ``(Tc [K], MW [kg/kmol])``.
+
+    Reactants are Cantera gas species (e.g. ``"CH4"``, ``"H2"``, ``"O2"``).
+    """
+    # ponytail: gaseous reactants at T0 — no liquid enthalpy / latent heat, so Tc
+    # reads high vs CEA for cryogenic liquids; add an inlet-enthalpy offset if needed.
+    gas = _get_solution()
+    gas.TPY = T0_k, float(P_pa), {
+        fuel_species: 1.0 / (1.0 + of_ratio),
+        ox_species: of_ratio / (1.0 + of_ratio),
+    }
+    gas.equilibrate("HP")
+    return float(gas.T), float(gas.mean_molecular_weight)

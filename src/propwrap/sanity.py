@@ -12,27 +12,27 @@ def sanity_check(r: PerformanceResult) -> list[str]:
     if r.gamma_exit < r.gamma_chamber - 1e-6:
         w.append(
             f"gamma_exit ({r.gamma_exit:.4f}) < gamma_chamber ({r.gamma_chamber:.4f}); "
-            "unexpected for typical expansion"
+            "unexpected for nozzle expansion — check inputs or try frozen=True"
         )
     if not (r.te_kelvin < r.tt_kelvin < r.tc_kelvin):
         w.append(
             f"temperature order odd: Te={r.te_kelvin:.1f}, Tt={r.tt_kelvin:.1f}, "
-            f"Tc={r.tc_kelvin:.1f} K"
+            f"Tc={r.tc_kelvin:.1f} K — CEA may not have converged; nudge O/F or Pc"
         )
     if r.isp_vac_shifting + 1e-6 < r.isp_sl_shifting:
-        w.append("Isp_vac_shifting < Isp_sl_shifting (unexpected)")
+        w.append("vacuum Isp below sea-level Isp — CEA result is suspect; rerun at slightly different ε")
     if r.isp_vac_shifting + 1e-6 < r.isp_vac_frozen:
         w.append("shifting Isp_vac < frozen Isp_vac (unexpected for ideal CEA)")
     if r.c_star < 1000 or r.c_star > 3500:
-        w.append(f"c*={r.c_star:.1f} m/s outside typical 1000–3500 m/s band")
+        w.append(f"c*={r.c_star:.1f} m/s outside typical 1000–3500 m/s — check propellant names and O/F")
     if r.tc_kelvin < 1500 or r.tc_kelvin > 4500:
-        w.append(f"Tc={r.tc_kelvin:.1f} K outside typical 1500–4500 K band")
+        w.append(f"Tc={r.tc_kelvin:.1f} K outside typical 1500–4500 K — O/F far from optimum? try scan_of()")
     if r.pe_pa <= 0 and r.eps > 1.5:
         w.append(f"pe_pa={r.pe_pa} non-positive")
     if r.eps > 40 and r.isp_vac_shifting > 0 and r.isp_sl_shifting < 0.85 * r.isp_vac_shifting:
         w.append(
-            f"ε={r.eps:.1f} large for sea-level: overexpansion likely "
-            f"(Isp_sl/Isp_vac={r.isp_sl_shifting / r.isp_vac_shifting:.2f})"
+            f"ε={r.eps:.1f} large for sea level: Isp_sl/Isp_vac="
+            f"{r.isp_sl_shifting / r.isp_vac_shifting:.2f}, separation likely; reduce ε for a first stage"
         )
     # Internal SI consistency (hard physics identities)
     if r.isp_vac_shifting > 0 and r.ve_vac_shifting > 0:
@@ -43,7 +43,8 @@ def sanity_check(r: PerformanceResult) -> list[str]:
                 f"({r.ve_vac_shifting:.3f} vs {ve_expect:.3f} m/s)"
             )
     if r.c_star > 0 and r.isp_vac_shifting > 0:
-        cf_expect = (r.isp_vac_shifting * G0) / r.c_star
+        # c*, cf_vac carry eta_cstar/eta_cf; isp_vac_shifting is ideal
+        cf_expect = (r.isp_vac_shifting * G0) / r.c_star * (r.eta_cf or 1.0) * (r.eta_cstar or 1.0)
         if abs(r.cf_vac - cf_expect) / cf_expect > 1e-4:
             w.append(
                 f"cf_vac inconsistent with ve/c* ({r.cf_vac:.6f} vs {cf_expect:.6f})"
@@ -62,13 +63,13 @@ def sanity_check(r: PerformanceResult) -> list[str]:
                 )
     if r.temps_are_default and r.oxidizer == "LOX":
         w.append(
-            "using default inlet temperatures; set fuel_temp_k/ox_temp_k for cryogens"
+            "default inlet temperatures used — pass fuel_temp_k=/ox_temp_k= (e.g. LOX 90 K) for cryogens"
         )
     if r.stoich_of_ratio is not None and r.of_ratio > 0:
         ratio = r.of_ratio / r.stoich_of_ratio
         if ratio < 0.5 or ratio > 1.5:
             w.append(
                 f"O/F={r.of_ratio:.3f} is {ratio:.2f}× stoich "
-                f"(stoich≈{r.stoich_of_ratio:.3f}); check mixture ratio"
+                f"(stoich≈{r.stoich_of_ratio:.3f}) — typo in O/F? use scan_of() to find the optimum"
             )
     return w

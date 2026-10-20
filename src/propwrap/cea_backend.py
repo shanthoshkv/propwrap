@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 import math
+import warnings
+from functools import lru_cache
 from typing import Any
+
+# rocketcea's estimate_Ambient_Isp divides by zero internally on some inputs; result is unaffected
+warnings.filterwarnings("ignore", category=RuntimeWarning, module=r"rocketcea\.")
 
 from propwrap.models import GammaProfile, PerformanceResult, StationState
 from propwrap.propellant_library import (
@@ -46,6 +51,7 @@ def _pc_psia(pc_pa: float) -> float:
     return pa_to_psi(pc_pa)
 
 
+@lru_cache(maxsize=64)
 def _make_cea_obj(
     fuel: str,
     oxidizer: str,
@@ -221,7 +227,7 @@ def compute_performance(
     if include_stations:
         try:
             sp_raw = cea.get_SpeciesMoleFractions(Pc=pc, MR=mr, eps=eps)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, IndexError, KeyError):
             sp_raw = None
         sp_ch = _species_at_station(sp_raw, 1)
         sp_th = _species_at_station(sp_raw, 2)
@@ -235,8 +241,9 @@ def compute_performance(
         rho_ex = lbm_ft3_to_kg_m3(dens[2])
         try:
             p_th_pa = pc_pa / float(cea.get_Throat_PcOvPe(Pc=pc, MR=mr, eps=eps))
-        except Exception:
-            p_th_pa = 0.56 * pc_pa
+        except (AttributeError, TypeError, ValueError, ZeroDivisionError):
+            g = float(gam_th)
+            p_th_pa = pc_pa * (2.0 / (g + 1.0)) ** (g / (g - 1.0))
         ch = _station(
             "chamber",
             rankine_to_kelvin(tc_r),
@@ -309,9 +316,10 @@ def compute_performance(
         density_basis=dens_basis,
         isp_vac_delivered=isp_vac_d if (eta_cstar < 1 or eta_cf < 1) else None,
         isp_sl_delivered=isp_sl_d if (eta_cstar < 1 or eta_cf < 1) else None,
+        ve_vac_delivered=isp_s_to_ve_m_s(isp_vac_d) if (eta_cstar < 1 or eta_cf < 1) else None,
         eta_cstar=eta_cstar if eta_cstar != 1.0 else None,
         eta_cf=eta_cf if eta_cf != 1.0 else None,
-        propwrap_version="0.1.0",
+        propwrap_version=__import__("propwrap").__version__,
     )
     result.warnings = sanity_check(result)
     return result
@@ -328,8 +336,12 @@ def ambient_isp(
     ox_temp_k: float | None = None,
     *,
     frozen: bool = False,
+    eta_cstar: float = 1.0,
+    eta_cf: float = 1.0,
 ) -> dict[str, float | str]:
-    """Isp and Cf at ambient pressure [Pa]."""
+    """Isp and Cf at ambient pressure [Pa]. Isp/ve scaled by eta_cstar*eta_cf, cf by eta_cf."""
+    if not (0 < eta_cstar <= 1.2 and 0 < eta_cf <= 1.2):
+        raise ValueError("eta_cstar and eta_cf should be in (0, 1.2]")
     if pamb_pa < 0:
         raise ValueError("pamb_pa must be >= 0")
     ft, ot, _ = resolve_temps(fuel, oxidizer, fuel_temp_k, ox_temp_k)
@@ -348,10 +360,11 @@ def ambient_isp(
             Pc=pc, MR=of_ratio, eps=eps, Pamb=pamb
         )
         _a, cf, _ = cea.get_PambCf(Pamb=pamb, Pc=pc, MR=of_ratio, eps=eps)
+    isp = float(isp) * eta_cstar * eta_cf
     return {
-        "isp_s": float(isp),
+        "isp_s": isp,
         "ve_m_s": isp_s_to_ve_m_s(isp),
-        "cf": float(cf),
+        "cf": float(cf) * eta_cf,
         "pamb_pa": float(pamb_pa),
         "mode": str(mode),
     }
@@ -381,8 +394,8 @@ def nozzle_profile(
         temps_r = cea.get_Temperatures(
             Pc=pc, MR=of_ratio, eps=e, frozen=frz, frozenAtThroat=0
         )
-        mw, gam = cea.get_exit_MolWt_gamma(Pc=pc, MR=of_ratio, eps=e)
-        pcope = float(cea.get_PcOvPe(Pc=pc, MR=of_ratio, eps=e))
+        mw, gam = cea.get_exit_MolWt_gamma(Pc=pc, MR=of_ratio, eps=e, frozen=frz)
+        pcope = float(cea.get_PcOvPe(Pc=pc, MR=of_ratio, eps=e, frozen=frz))
         gams.append(float(gam))
         temps.append(rankine_to_kelvin(temps_r[2]))
         mws.append(float(mw))
@@ -420,7 +433,7 @@ def gamma_and_temp_at_eps(
     temps_r = cea.get_Temperatures(
         Pc=pc, MR=of_ratio, eps=e, frozen=frz, frozenAtThroat=0
     )
-    _mw, gam = cea.get_exit_MolWt_gamma(Pc=pc, MR=of_ratio, eps=e)
+    _mw, gam = cea.get_exit_MolWt_gamma(Pc=pc, MR=of_ratio, eps=e, frozen=frz)
     tc_k = rankine_to_kelvin(temps_r[0])
     te_k = rankine_to_kelvin(temps_r[2])
     return float(gam), float(te_k), float(tc_k)

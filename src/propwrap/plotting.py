@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 from typing import Sequence
 
+from propwrap.errors import require
+
 # Headless-friendly default (lab servers, CI, broken Tk installs)
-import matplotlib
+matplotlib = require("matplotlib", "plot")
 
 if os.environ.get("MPLBACKEND") is None:
     matplotlib.use("Agg")
@@ -15,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from propwrap.models import GammaProfile, PerformanceResult, SweepResult
+from propwrap.models import DensityIspCurve, GammaProfile, PerformanceResult, SweepResult
 
 # Design system
 BG = "#0a0a0a"
@@ -24,8 +27,21 @@ GRID = "#2a2a2a"
 ACCENT = "#5b8dee"
 SECONDARY = "#d4924a"  # amber-copper
 SPINE = "#333333"
+MUTED = "#888888"
+PALETTE = [ACCENT, SECONDARY, "#7dcea0", "#c678dd", "#e06c75", "#56b6c2", "#e5c07b"]
+
+THEMES = {
+    "dark": {"BG": "#0a0a0a", "FG": "#e0e0e0", "GRID": "#2a2a2a", "SPINE": "#333333"},
+    "light": {"BG": "#ffffff", "FG": "#1a1a1a", "GRID": "#d9d9d9", "SPINE": "#888888"},
+}
 
 
+def set_theme(name: str = "dark") -> None:
+    """Switch plot palette: ``"dark"`` (screen) or ``"light"`` (print/LaTeX)."""
+    globals().update(THEMES[name])
+
+
+@lru_cache(maxsize=None)
 def _resolve_font(preferred: Sequence[str], fallback: str) -> str:
     from matplotlib import font_manager
 
@@ -38,8 +54,8 @@ def _resolve_font(preferred: Sequence[str], fallback: str) -> str:
 
 def apply_dark_theme(fig: Figure | None = None, ax: Axes | None = None) -> None:
     """Apply the suite dark theme to a figure/axes (or rcParams globally)."""
-    mono = _resolve_font(["DM Mono", "DejaVu Sans Mono", "Consolas"], "DejaVu Sans Mono")
-    sans = _resolve_font(["DM Sans", "DejaVu Sans", "Arial"], "DejaVu Sans")
+    mono = _resolve_font(("DM Mono", "DejaVu Sans Mono", "Consolas"), "DejaVu Sans Mono")
+    sans = _resolve_font(("DM Sans", "DejaVu Sans", "Arial"), "DejaVu Sans")
 
     if fig is None and ax is None:
         plt.rcParams.update(
@@ -82,8 +98,20 @@ def apply_dark_theme(fig: Figure | None = None, ax: Axes | None = None) -> None:
 
 def _save(fig: Figure, save_path: str | None) -> Figure:
     if save_path:
-        fig.savefig(save_path, dpi=150, facecolor=fig.get_facecolor(), bbox_inches="tight")
+        # format follows extension: .pdf/.svg stay vector for LaTeX
+        fig.savefig(save_path, dpi=300, facecolor=fig.get_facecolor(), bbox_inches="tight")
     return fig
+
+
+def _legend(*axes: Axes) -> None:
+    """One legend on the first axes, collecting handles from twin axes too."""
+    handles, labels = [], []
+    for a in axes:
+        h, lab = a.get_legend_handles_labels()
+        handles += h
+        labels += lab
+    if handles:
+        axes[0].legend(handles, labels, loc="best", framealpha=0.9, fontsize=8)
 
 
 def _annotate_optimum(
@@ -100,7 +128,7 @@ def _annotate_optimum(
         textcoords="offset points",
         color=SECONDARY,
         fontsize=8,
-        fontfamily=_resolve_font(["DM Mono", "DejaVu Sans Mono"], "DejaVu Sans Mono"),
+        fontfamily=_resolve_font(("DM Mono", "DejaVu Sans Mono"), "DejaVu Sans Mono"),
     )
 
 
@@ -114,14 +142,23 @@ def plot_of_sweep(
         raise ValueError("plot_of_sweep requires sweep_variable='of_ratio'")
 
     xs = sweep_result.values
-    isp = [r.isp_vac_shifting for r in sweep_result.results]
-    tc = [r.tc_kelvin for r in sweep_result.results]
+    rs = sweep_result.results
+    isp = [r.isp_vac_shifting for r in rs]
+    isp_f = [r.isp_vac_frozen for r in rs]
+    tc = [r.tc_kelvin for r in rs]
 
     fig, ax1 = plt.subplots(figsize=(8, 4.5))
     apply_dark_theme(fig, ax1)
     ax1.plot(xs, isp, color=ACCENT, lw=2.0, label="Isp vac (shifting)")
+    ax1.plot(xs, isp_f, color=ACCENT, lw=1.2, ls="--", label="Isp vac (frozen)")
+    ax1.fill_between(xs, isp_f, isp, color=ACCENT, alpha=0.12)
+    ax1.plot(xs, [r.isp_sl_shifting for r in rs], color="#7dcea0", lw=1.2, label="Isp SL (shifting)")
+    if rs[0].isp_vac_delivered is not None:
+        ax1.plot(
+            xs, [r.isp_vac_delivered or float("nan") for r in rs], color=FG, lw=1.0, ls="-.", label="Isp vac delivered (η)"
+        )
     ax1.set_xlabel("O/F mass ratio [-]")
-    ax1.set_ylabel("Isp vacuum [s]", color=ACCENT)
+    ax1.set_ylabel("Isp [s]", color=ACCENT)
     ax1.tick_params(axis="y", labelcolor=ACCENT)
 
     ax2 = ax1.twinx()
@@ -140,13 +177,13 @@ def plot_of_sweep(
     if sweep_result.stoich_of_ratio is not None:
         ax1.axvline(
             sweep_result.stoich_of_ratio,
-            color="#888888",
+            color=MUTED,
             ls=":",
             lw=1.0,
             label=f"stoich O/F={sweep_result.stoich_of_ratio:.2f}",
         )
-        ax1.legend(loc="best", framealpha=0.9)
-    ax1.set_title("O/F sweep — vacuum Isp & chamber temperature")
+    _legend(ax1, ax2)
+    ax1.set_title("O/F sweep — Isp (shifting vs frozen) & chamber temperature")
     fig.tight_layout()
     return _save(fig, save_path)
 
@@ -192,11 +229,12 @@ def plot_eps_sweep(
         raise ValueError("plot_eps_sweep requires sweep_variable='eps'")
 
     xs = sweep_result.values
-    isp = [r.isp_vac_shifting for r in sweep_result.results]
+    rs = sweep_result.results
+    isp = [r.isp_vac_shifting for r in rs]
 
     fig, ax = plt.subplots(figsize=(8, 4.5))
     apply_dark_theme(fig, ax)
-    ax.plot(xs, isp, color=ACCENT, lw=2.0)
+    ax.plot(xs, isp, color=ACCENT, lw=2.0, label="Isp vac")
     ax.set_xlabel("Area ratio Ae/At [-]")
     ax.set_ylabel("Isp vacuum [s]")
     opt = sweep_result.optimum("isp_vac_shifting")
@@ -206,7 +244,23 @@ def plot_eps_sweep(
         opt.isp_vac_shifting,
         f"opt ε={opt.eps:.1f}\nIsp={opt.isp_vac_shifting:.1f}s",
     )
-    ax.set_title("Area ratio sweep — vacuum Isp")
+
+    ax2 = ax.twinx()
+    apply_dark_theme(fig, ax2)
+    ax2.plot(xs, [r.cf_vac for r in rs], color=SECONDARY, lw=1.4, ls="--", label="Cf vac")
+    ax2.plot(xs, [r.cf_sl for r in rs], color="#7dcea0", lw=1.4, ls="--", label="Cf SL")
+    ax2.set_ylabel("Cf [-]")
+
+    # Sea-level expansion markers: Pe = Pamb (optimum) and Pe/Pamb = 0.4 (Summerfield)
+    pr = [(r.pe_pa or 0.0) / (r.pamb_sl_pa or 101325.0) for r in rs]
+    for target, label, ls in ((1.0, "Pe = Pamb (SL)", ":"), (0.4, "Summerfield Pe/Pa=0.4", "-.")):
+        for i in range(len(pr) - 1):
+            if (pr[i] - target) * (pr[i + 1] - target) <= 0 and pr[i] != pr[i + 1]:
+                e = xs[i] + (target - pr[i]) * (xs[i + 1] - xs[i]) / (pr[i + 1] - pr[i])
+                ax.axvline(e, color=MUTED, ls=ls, lw=1.0, label=f"{label}: ε={e:.1f}")
+                break
+    _legend(ax, ax2)
+    ax.set_title("Area ratio sweep — vacuum Isp & Cf")
     fig.tight_layout()
     return _save(fig, save_path)
 
@@ -216,8 +270,21 @@ def plot_gamma_profile(
     *,
     save_path: str | None = None,
 ) -> Figure:
-    """γ vs area ratio, with optional CEA/Cantera overlay."""
-    fig, ax = plt.subplots(figsize=(8, 4.5))
+    """γ vs area ratio, with optional CEA/Cantera overlay and residual panel."""
+    g_ct = gamma_profile.gamma_cantera
+    has_ct = g_ct is not None
+    if g_ct is not None:
+        fig, (ax, axr) = plt.subplots(
+            2, 1, figsize=(8, 5.5), sharex=True, gridspec_kw={"height_ratios": [3, 1]}
+        )
+        apply_dark_theme(fig, axr)
+        resid = [c - g for c, g in zip(g_ct, gamma_profile.gamma_cea)]
+        axr.plot(gamma_profile.area_ratios, resid, color=SECONDARY, lw=1.2)
+        axr.axhline(0.0, color=MUTED, lw=0.8)
+        axr.set_ylabel("Δγ (Ct−CEA)")
+        axr.set_xlabel("Area ratio Ae/At [-]")
+    else:
+        fig, ax = plt.subplots(figsize=(8, 4.5))
     apply_dark_theme(fig, ax)
     ax.plot(
         gamma_profile.area_ratios,
@@ -235,7 +302,8 @@ def plot_gamma_profile(
             ls="--",
             label="Cantera frozen",
         )
-    ax.set_xlabel("Area ratio Ae/At [-]")
+    if not has_ct:
+        ax.set_xlabel("Area ratio Ae/At [-]")
     ax.set_ylabel("γ [-]")
     ax.set_title(f"γ vs area ratio ({gamma_profile.source})")
     ax.legend(loc="best", framealpha=0.9)
@@ -249,8 +317,6 @@ def plot_density_isp(
     save_path: str | None = None,
 ) -> Figure:
     """Isp and density-Isp vs O/F (propellant characterization)."""
-    from propwrap.models import DensityIspCurve as _DIC  # noqa: F401
-
     xs = [p.of_ratio for p in curve.points]
     isp = [p.isp_vac_shifting for p in curve.points]
     di = [p.density_isp for p in curve.points]
@@ -260,8 +326,12 @@ def plot_density_isp(
     ax1.plot(xs, isp, color=ACCENT, lw=2.0, label="Isp vac")
     ax1.set_xlabel("O/F mass ratio [-]")
     ax1.set_ylabel("Isp vacuum [s]", color=ACCENT)
-    ax1.axvline(curve.optimum_isp_of, color=ACCENT, ls=":", lw=1.0, alpha=0.7)
+    ax1.axvline(
+        curve.optimum_isp_of, color=ACCENT, ls=":", lw=1.0, alpha=0.7,
+        label=f"max Isp O/F={curve.optimum_isp_of:.2f}",
+    )
 
+    axes = [ax1]
     if any(v is not None for v in di):
         ax2 = ax1.twinx()
         apply_dark_theme(fig, ax2)
@@ -275,16 +345,19 @@ def plot_density_isp(
                 ls=":",
                 lw=1.0,
                 alpha=0.7,
+                label=f"max ρ·Isp O/F={curve.optimum_density_isp_of:.2f}",
             )
+        axes.append(ax2)
 
     if curve.stoich_of_ratio is not None:
         ax1.axvline(
             curve.stoich_of_ratio,
-            color="#888888",
+            color=MUTED,
             ls=":",
             lw=1.0,
             label=f"stoich={curve.stoich_of_ratio:.2f}",
         )
+    _legend(*axes)
     ax1.set_title(f"Density-Isp: {curve.fuel}/{curve.oxidizer}")
     fig.tight_layout()
     return _save(fig, save_path)
@@ -302,31 +375,172 @@ def plot_propellant_comparison(
     if not results:
         raise ValueError("results must be non-empty")
 
-    metrics = [
-        ("isp_vac_shifting", "Isp vac [s]"),
-        ("tc_kelvin", "Tc [K]"),
-        ("c_star", "c* [m/s]"),
-    ]
-    n_metrics = len(metrics)
-    n = len(results)
-    x = list(range(n))
-    width = 0.25
+    x = list(range(len(results)))
+    colors = [PALETTE[i % len(PALETTE)] for i in x]
 
-    fig, axes = plt.subplots(1, n_metrics, figsize=(4 * n_metrics, 4.2))
-    if n_metrics == 1:
-        axes = [axes]
+    fig, axes = plt.subplots(1, len(_COMPARE_METRICS), figsize=(4 * len(_COMPARE_METRICS), 4.2))
     apply_dark_theme(fig)
 
-    colors = [ACCENT, SECONDARY, "#7dcea0"]
-    for ax, (attr, ylabel), color in zip(axes, metrics, colors):
+    for ax, (attr, ylabel) in zip(axes, _COMPARE_METRICS):
         apply_dark_theme(fig, ax)
-        vals = [float(getattr(r, attr)) for r in results]
-        ax.bar(x, vals, width=0.6, color=color, edgecolor=SPINE)
+        vals = [float(getattr(r, attr) or 0.0) for r in results]
+        ax.bar(x, vals, width=0.6, color=colors, edgecolor=SPINE)
         ax.set_xticks(x)
         ax.set_xticklabels(labels, rotation=20, ha="right")
         ax.set_ylabel(ylabel)
         ax.set_title(ylabel)
 
     fig.suptitle("Propellant comparison", color=FG, fontsize=13)
+    fig.tight_layout()
+    return _save(fig, save_path)
+
+
+_COMPARE_METRICS = [
+    ("isp_vac_shifting", "Isp vac [s]"),
+    ("density_impulse_vac_shifting", "ρ·Isp [s·kg/m³]"),
+    ("tc_kelvin", "Tc [K]"),
+    ("c_star", "c* [m/s]"),
+]
+
+
+def plot_propellant_parallel(
+    results: list[PerformanceResult],
+    labels: list[str],
+    *,
+    save_path: str | None = None,
+) -> Figure:
+    """Parallel coordinates: each metric normalised to the best propellant (=1)."""
+    if len(results) != len(labels) or not results:
+        raise ValueError("results and labels must be non-empty and the same length")
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    apply_dark_theme(fig, ax)
+    cols = [[float(getattr(r, a) or 0.0) for r in results] for a, _ in _COMPARE_METRICS]
+    xs = list(range(len(_COMPARE_METRICS)))
+    for i, lab in enumerate(labels):
+        ys = [c[i] / max(c) if max(c) > 0 else 0.0 for c in cols]
+        ax.plot(xs, ys, "o-", color=PALETTE[i % len(PALETTE)], lw=1.8, label=lab)
+    ax.set_xticks(xs)
+    ax.set_xticklabels([lab for _, lab in _COMPARE_METRICS])
+    ax.set_ylabel("Fraction of best [-]")
+    ax.set_title("Propellant comparison — normalised")
+    _legend(ax)
+    fig.tight_layout()
+    return _save(fig, save_path)
+
+
+def plot_isp_map(
+    of_values: list[float],
+    pc_pa_values: list[float],
+    isp_grid: list[list[float]],
+    *,
+    save_path: str | None = None,
+) -> Figure:
+    """Contour of vacuum Isp over O/F × Pc (``isp_grid[pc][of]``), max-Isp ridge marked."""
+    from propwrap.units import pa_to_mpa
+
+    pcs = [pa_to_mpa(p) for p in pc_pa_values]
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    apply_dark_theme(fig, ax)
+    cs = ax.contourf(of_values, pcs, isp_grid, levels=20, cmap="viridis")
+    ax.contour(of_values, pcs, isp_grid, levels=10, colors=BG, linewidths=0.4)
+    cb = fig.colorbar(cs, ax=ax)
+    cb.set_label("Isp vac [s]", color=FG)
+    cb.ax.tick_params(colors=FG)
+    ridge = [of_values[row.index(max(row))] for row in isp_grid]
+    ax.plot(ridge, pcs, color=SECONDARY, lw=1.5, ls="--", label="opt O/F")
+    ax.set_xlabel("O/F mass ratio [-]")
+    ax.set_ylabel("Chamber pressure [MPa]")
+    ax.set_title("Isp map — O/F × Pc")
+    _legend(ax)
+    fig.tight_layout()
+    return _save(fig, save_path)
+
+
+def plot_species(
+    sweep_result: SweepResult,
+    *,
+    station: str = "chamber",
+    top: int = 6,
+    save_path: str | None = None,
+) -> Figure:
+    """Stacked mole fractions vs O/F at a station; minor species lumped as 'other'."""
+    if sweep_result.sweep_variable != "of_ratio":
+        raise ValueError("plot_species requires sweep_variable='of_ratio'")
+    comps = [
+        (getattr(r, station).species_mole_fractions if getattr(r, station) else {})
+        for r in sweep_result.results
+    ]
+    peak: dict[str, float] = {}
+    for c in comps:
+        for sp, x in c.items():
+            peak[sp] = max(peak.get(sp, 0.0), x)
+    keep = sorted(peak, key=peak.__getitem__, reverse=True)[:top]
+    ys = [[c.get(sp, 0.0) for c in comps] for sp in keep]
+    ys.append([max(0.0, 1.0 - sum(c.get(sp, 0.0) for sp in keep)) for c in comps])
+
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    apply_dark_theme(fig, ax)
+    ax.stackplot(
+        sweep_result.values, ys, labels=keep + ["other"],
+        colors=(PALETTE * 2)[: len(keep)] + [MUTED], alpha=0.85,
+    )
+    ax.set_xlabel("O/F mass ratio [-]")
+    ax.set_ylabel("Mole fraction [-]")
+    ax.set_ylim(0, 1)
+    ax.set_title(f"{station.capitalize()} composition vs O/F")
+    _legend(ax)
+    fig.tight_layout()
+    return _save(fig, save_path)
+
+
+def plot_stations(
+    result: PerformanceResult,
+    *,
+    save_path: str | None = None,
+) -> Figure:
+    """T, P, γ and MW at chamber → throat → exit."""
+    sts = [s for s in (result.chamber, result.throat, result.exit) if s is not None]
+    if not sts:
+        raise ValueError("result has no station data (evaluate with full=True)")
+    names = [s.name for s in sts]
+    panels = [
+        ([s.temperature_k for s in sts], "T [K]"),
+        ([s.pressure_pa / 1e5 for s in sts], "P [bar]"),
+        ([s.gamma for s in sts], "γ [-]"),
+        ([s.mw for s in sts], "MW [kg/kmol]"),
+    ]
+    fig, axes = plt.subplots(1, 4, figsize=(13, 3.6))
+    apply_dark_theme(fig)
+    for ax, (vals, lab), color in zip(axes, panels, PALETTE):
+        apply_dark_theme(fig, ax)
+        ax.plot(names, vals, "o-", color=color, lw=1.8)
+        ax.set_title(lab)
+    axes[1].set_yscale("log")
+    fig.suptitle(
+        f"Station properties — {result.fuel}/{result.oxidizer}, O/F={result.of_ratio:.2f}",
+        color=FG, fontsize=12,
+    )
+    fig.tight_layout()
+    return _save(fig, save_path)
+
+
+def plot_altitude(
+    rows: list[dict[str, float | str]],
+    *,
+    save_path: str | None = None,
+) -> Figure:
+    """Isp vs altitude from :func:`propwrap.engine.altitude_performance`."""
+    hs = [float(r["altitude_m"]) / 1000.0 for r in rows]
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    apply_dark_theme(fig, ax)
+    ax.plot(hs, [float(r["isp_s"]) for r in rows], color=ACCENT, lw=2.0, label="Isp")
+    ax2 = ax.twinx()
+    apply_dark_theme(fig, ax2)
+    ax2.plot(hs, [float(r["pamb_pa"]) / 1000.0 for r in rows], color=MUTED, ls="--", label="Pamb")
+    ax2.set_ylabel("Ambient pressure [kPa]")
+    ax.set_xlabel("Altitude [km] (US Std 1976)")
+    ax.set_ylabel("Isp [s]")
+    ax.set_title("Isp vs altitude — fixed geometry")
+    _legend(ax, ax2)
     fig.tight_layout()
     return _save(fig, save_path)

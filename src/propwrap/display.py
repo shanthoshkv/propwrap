@@ -27,6 +27,9 @@ def performance_summary(r: PerformanceResult, *, frozen: bool = False) -> str:
         f"γ_ch     {r.gamma_chamber:.4f}     γ_ex {r.gamma_exit:.4f}     "
         f"Pe {r.pe_pa:.3e} Pa",
     ]
+    g_ct = r.gamma_frozen_cantera()
+    if g_ct is not None:
+        lines.append(f"γ_ch frozen (Cantera cross-check) {g_ct:.4f}")
     if r.density_impulse_vac_shifting is not None:
         lines.append(
             f"ρ·Isp    {r.density_impulse_vac_shifting:.1f} s·kg/m³"

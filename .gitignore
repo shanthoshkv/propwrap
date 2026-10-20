@@ -168,6 +168,15 @@ propwrap_hydrolox_*/
 propwrap_storable_*/
 propwrap_custom_*/
 
+# LaTeX build artefacts
+*.aux
+*.toc
+*.lof
+*.lot
+*.out
+*.synctex.gz
+
 # secrets
 pypi token.txt
 *token*.txt
+!tests/baseline/*.png

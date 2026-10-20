@@ -9,6 +9,8 @@ import hashlib
 import json
 import sqlite3
 import time
+from functools import lru_cache
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -17,6 +19,18 @@ from pydantic import BaseModel
 T = TypeVar("T", bound=BaseModel)
 
 DEFAULT_CACHE_PATH = Path.home() / ".propwrap" / "cache.db"
+
+
+@lru_cache(maxsize=1)
+def _versions() -> str:
+    """propwrap + rocketcea versions, so upgrades invalidate stale entries."""
+    out = []
+    for pkg in ("propwrap", "rocketcea"):
+        try:
+            out.append(f"{pkg}={version(pkg)}")
+        except PackageNotFoundError:
+            out.append(f"{pkg}=?")
+    return ";".join(out)
 
 
 def default_cache_path() -> Path:
@@ -72,6 +86,7 @@ class ResultCache:
             "fuel_temp_k": None if fuel_temp_k is None else round(float(fuel_temp_k), 6),
             "ox_temp_k": None if ox_temp_k is None else round(float(ox_temp_k), 6),
             "method": method,
+            "versions": _versions(),
             **extra,
         }
         blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))

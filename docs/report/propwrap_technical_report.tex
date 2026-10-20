@@ -1,0 +1,1071 @@
+% =============================================================================
+% propwrap — Technical Report
+% Industry-style engineering documentation (ideal CEA thermochemistry library)
+% Compile: pdflatex propwrap_technical_report.tex  (run twice for ToC/refs)
+% =============================================================================
+\documentclass[11pt,a4paper]{report}
+
+% --- Encoding & fonts ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% --- Page & layout ---
+\usepackage[margin=25mm,headheight=14pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage{csquotes}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{appendix}
+
+\sisetup{
+  per-mode = symbol,
+  detect-all,
+  inter-unit-product = \ensuremath{{}\cdot{}}
+}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black!70!blue,
+  citecolor=black!60!green,
+  urlcolor=black!50!blue,
+  pdftitle={propwrap Technical Report},
+  pdfauthor={Shanthosh K V},
+  pdfsubject={Liquid bipropellant thermochemistry software}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{propwrap} Technical Report}
+\fancyhead[R]{\small\thepage}
+\fancyfoot[C]{\footnotesize Independent open-source project --- not flight-certified}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{16pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-10pt}{24pt}
+
+% --- Listings style (code) ---
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\color{black!50},
+  stringstyle=\color{black!40!blue},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!20},
+  backgroundcolor=\color{black!3},
+  tabsize=4,
+  morekeywords={True,False,None}
+}
+\lstset{style=py}
+
+% --- Custom commands ---
+\newcommand{\pw}{\texttt{propwrap}}
+\newcommand{\cea}{\textsc{cea}}
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\of}{\mathrm{O/F}}
+\newcommand{\Isp}{I_{\mathrm{sp}}}
+\newcommand{\cstar}{c^{*}}
+\newcommand{\Cf}{C_{f}}
+\newcommand{\ve}{v_{e}}
+\newcommand{\Pc}{P_{c}}
+\newcommand{\Pe}{P_{e}}
+\newcommand{\Pa}{P_{a}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\gzero}{g_{0}}
+
+\begin{document}
+
+% =============================================================================
+% TITLE PAGE
+% =============================================================================
+\begin{titlepage}
+  \centering
+  \vspace*{1.2cm}
+  {\Large\bfseries Technical Report}\\[0.6cm]
+  {\huge\bfseries propwrap}\\[0.35cm]
+  {\Large A Software Library for Liquid Bipropellant\\
+  Thermochemical Performance Evaluation}\\[1.2cm]
+
+  \begin{tabular}{rl}
+    \textbf{Document type} & Engineering software technical report \\
+    \textbf{Software version} & 0.1.3 \\
+    \textbf{Distribution} & PyPI package \texttt{propwrap}; MIT source license \\
+    \textbf{Author} & Shanthosh K.\ V.\ (\texttt{shanthoshkv@gmail.com}) \\
+    \textbf{Repository} & \url{https://github.com/shanthoshkv/propwrap} \\
+    \textbf{Project website} & \url{https://aboutkvs.vercel.app/propwrap.html} \\
+    \textbf{Date} & 30 July 2026 \\
+  \end{tabular}
+
+  \vfill
+  \begin{minipage}{0.92\textwidth}
+    \small
+    \textbf{Disclaimer.}
+    This document describes theoretical, one-dimensional chemical equilibrium
+    performance as implemented by NASA~\cea{} (via RocketCEA). Numbers produced
+    by the software are \emph{not} flight-delivered engine performance and do not
+    constitute certification evidence. The project is independent open-source work
+    and is \textbf{not affiliated with} ISRO, DRDO, NAL, HAL, NASA, or any other
+    agency or company.
+  \end{minipage}
+
+  \vspace{1.2cm}
+  {\footnotesize MIT License for \pw{} source code.
+  Third-party engines (RocketCEA/GPL-family, Cantera, etc.) retain their own licenses.}
+\end{titlepage}
+
+% =============================================================================
+% FRONT MATTER
+% =============================================================================
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\listoffigures
+\listoftables
+\newpage
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\noindent
+Liquid rocket design begins with propellant thermochemistry: mixture ratio,
+chamber pressure, and nozzle expansion set the ideal specific impulse,
+characteristic velocity, product temperature, and molecular weight that every
+downstream subsystem inherits. NASA's Chemical Equilibrium with Applications
+(\cea{}) program remains the standard way to compute those numbers, but
+day-to-day use is still awkward---English units leak into SI notebooks, scripts
+drift, and multi-propellant trades are often run at a single forced mixture
+ratio that is fair to none of the pairs.
+
+\pw{} is a Python~3.10+ library that wraps NASA~\cea{} through RocketCEA and
+exposes a typed, SI-first public API. It computes vacuum and sea-level
+specific impulse (shifting and frozen chemistry), effective exhaust velocity,
+characteristic velocity, thrust coefficients, station temperatures and
+pressures, product $\gamma$, bulk liquid density, and density impulse. Higher-level
+workflows support O/F sweeps, fair multi-pair trades (each pair at its own
+optimum O/F), multi-component blends, unit conversion, SQLite result caching,
+a command-line interface, optional Cantera frozen-$\gamma$ cross-checks, and
+student-oriented lab report packs.
+
+This report documents the engineering motivation, governing performance
+relations, software architecture, unit system, public interfaces, validation
+strategy (including published RocketCEA goldens and physics identity tests),
+worked examples, and known limitations. The intent is that a propulsion engineer
+or graduate student can read this document, install the package from PyPI, and
+reproduce the same theoretical numbers with a clear understanding of what they
+do---and do not---mean.
+
+\vspace{0.8em}
+\noindent\textbf{Keywords:}
+liquid rocket propellants; NASA CEA; RocketCEA; specific impulse; characteristic
+velocity; density impulse; SI units; software validation; Python.
+
+\newpage
+\chapter*{Nomenclature}
+\addcontentsline{toc}{chapter}{Nomenclature}
+
+\section*{Symbols}
+\begin{longtable}{@{}p{2.4cm}p{11.5cm}@{}}
+$A_e$, $A_t$ & Exit and throat areas [\si{\metre\squared}] \\
+$\Cf$ & Thrust coefficient [---] \\
+$\cstar$ & Characteristic velocity [\si{\metre\per\second}] \\
+$c_p$, $c_v$ & Specific heats at constant pressure / volume \\
+$F$ & Thrust [\si{\newton}] \\
+$\gzero$ & Standard gravity, \SI{9.80665}{\metre\per\second\squared} \\
+$\gamma$ & Isentropic exponent (performance $\gamma$ from \cea{}) \\
+$\Isp$ & Specific impulse [\si{\second}] \\
+$\dot{m}$ & Mass flow rate [\si{\kilogram\per\second}] \\
+$M_w$ & Molecular weight [\si{\kilogram\per\kilo\mole}] \\
+$\of$ & Mixture ratio, $m_{\mathrm{ox}}/m_{\mathrm{fuel}}$ [---] \\
+$\Pc$, $\Pe$, $\Pa$ & Chamber, exit, ambient pressure [\si{\pascal}] \\
+$R$ & Specific gas constant; $R_u$ universal gas constant \\
+$T_c$, $T_t$, $T_e$ & Chamber, throat, exit temperatures [\si{\kelvin}] \\
+$\ve$ & Effective exhaust velocity [\si{\metre\per\second}] \\
+$\eps$ & Nozzle area ratio $A_e/A_t$ [---] \\
+$\eta_{c^{*}}$, $\eta_{\Cf}$ & Optional efficiency factors applied to $\cstar$ and $\Cf$ \\
+$\rho$ & Density [\si{\kilogram\per\metre\cubed}] \\
+$\mu$, $k$, $\mathrm{Pr}$ & Viscosity, thermal conductivity, Prandtl number \\
+\end{longtable}
+
+\section*{Abbreviations}
+\begin{longtable}{@{}p{2.8cm}p{11.1cm}@{}}
+\cea{} & Chemical Equilibrium with Applications (NASA) \\
+CLI & Command-line interface \\
+DfAM & Design for additive manufacturing (context only; not in \pw{}) \\
+LOX & Liquid oxygen \\
+LH$_2$ & Liquid hydrogen \\
+MMH & Monomethylhydrazine \\
+N$_2$O$_4$ & Nitrogen tetroxide \\
+RP-1 & Rocket Propellant-1 (kerosene-class) \\
+SI & International System of Units \\
+UDMH & Unsymmetrical dimethylhydrazine \\
+\end{longtable}
+
+\newpage
+\pagenumbering{arabic}
+
+% =============================================================================
+\chapter{Introduction}
+% =============================================================================
+
+\section{Why propellant numbers matter early}
+
+Before anyone sizes a turbopump or draws a cooling channel, someone has to
+answer a deceptively simple question: \emph{if this fuel and oxidizer burn at
+this mixture ratio and chamber pressure, and expand through this area ratio,
+what ideal performance do we get?}
+
+Those answers---$\Isp$, $\cstar$, $T_c$, $\gamma$, $M_w$---propagate into every later
+calculation. A few seconds of $\Isp$ error looks small on a slide and expensive
+on a mass budget. A wrong $\gamma$ or molecular weight spoils a nozzle contour
+study before the first CAD feature is drawn. In practice the industry has used
+NASA~\cea{} for decades precisely because the equilibrium chemistry problem is
+too messy to reinvent casually~\citep{gordon1994cea,gordon1996cea}.
+
+\section{The practical problem \pw{} addresses}
+
+\cea{} itself is solid. The surrounding workflow is often not:
+
+\begin{itemize}[leftmargin=*]
+  \item Scripts and notebook cells accumulate English units (psia, Rankine,
+        ft/s) next to SI formulas.
+  \item Results live as parsed strings or ad-hoc dictionaries.
+  \item ``Fair'' propellant trades sometimes force one O/F onto hydrogen and
+        kerosene alike---chemically unfair and easy to publish by mistake.
+  \item Re-running last semester's case means hoping the same CEA deck still
+        exists on someone's laptop.
+\end{itemize}
+
+\pw{} exists to make the propellant layer boring and reliable: one importable
+library, SI public results, typed models, reproducible tests, and workflows that
+make the right comparison the easy comparison.
+
+\section{What this report covers}
+
+Chapters~\ref{ch:theory}--\ref{ch:units} state the performance theory and the
+unit conventions the software enforces. Chapter~\ref{ch:arch} describes
+architecture and major modules. Chapter~\ref{ch:api} summarises the public API
+and CLI. Chapter~\ref{ch:validation} documents validation claims and automated
+tests. Chapter~\ref{ch:examples} walks through representative cases.
+Chapter~\ref{ch:limits} states limitations honestly. References and appendices
+collect sources and package layout.
+
+\section{Project identity}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Name:} \pw{} (PyPI: \texttt{propwrap})
+  \item \textbf{Language / requirement:} Python~$\geq 3.10$
+  \item \textbf{Core engine:} NASA~\cea{} via RocketCEA~\citep{rocketcea}
+  \item \textbf{Optional cross-check:} Cantera frozen $\gamma$~\citep{cantera}
+  \item \textbf{Source license:} MIT for \pw{} code; RocketCEA is GPL-family---both
+        must be reviewed for proprietary redistribution
+  \item \textbf{Affiliation:} Independent open source; not an agency product
+\end{itemize}
+
+% =============================================================================
+\chapter{Scope of the software}
+\label{ch:scope}
+% =============================================================================
+
+\section{In scope}
+
+\pw{} addresses \textbf{liquid bipropellant thermochemical performance} under
+ideal one-dimensional \cea{} assumptions:
+
+\begin{itemize}[leftmargin=*]
+  \item Shifting (equilibrium) and frozen composition rocket performance
+  \item Vacuum and sea-level specific impulse
+  \item Effective exhaust velocity $\ve=\Isp\gzero$
+  \item Characteristic velocity $\cstar$ and thrust coefficient $\Cf$
+  \item Chamber / throat / exit temperatures and pressures
+  \item Product $\gamma$, molecular weight, selected transport properties
+  \item Liquid bulk density and density impulse $\rho\Isp$
+  \item O/F, $\Pc$, and $\eps$ parametric sweeps
+  \item Multi-pair trades at each pair's own optimum O/F
+  \item Multi-component weight-percent blends and a propellant registry
+  \item SI converters, CLI, SQLite cache, student homework packs
+\end{itemize}
+
+\section{Out of scope}
+
+The library is deliberately \emph{not} a full engine design code:
+
+\begin{itemize}[leftmargin=*]
+  \item No injector CFD, droplet combustion, or finite-rate kinetics
+  \item No regenerative cooling channel sizing or structural margins
+  \item No turbopump or feed-system geometry
+  \item No trajectory, vehicle $\Delta v$, or stage optimisation
+  \item No claim that theoretical $\Isp$ equals flight-delivered $\Isp$
+  \item No flight certification or agency endorsement
+\end{itemize}
+
+Those tools can sit \emph{on top} of \pw{} and pull $\gamma$, $\cstar$, $T$, and
+$\Isp$ from one tested place.
+
+\section{Truthfulness of numbers}
+
+Unless the user applies optional efficiency knobs $\eta_{c^{*}}$ and
+$\eta_{\Cf}$, every performance number is \textbf{ideal theoretical \cea{}}.
+Real engines deliver less. That distinction is written into the documentation,
+lab packs, and this report on purpose.
+
+% =============================================================================
+\chapter{Theoretical background}
+\label{ch:theory}
+% =============================================================================
+
+This chapter recalls the classical rocket performance definitions that \cea{}
+implements and that \pw{} exposes. Derivations follow standard propulsion
+texts~\citep{sutton2017,huzel1992} and the NASA~\cea{} rocket problem
+statement~\citep{gordon1994cea}.
+
+\section{Thrust and effective exhaust velocity}
+
+The axial thrust of an ideal rocket in ambient pressure $\Pa$ is
+\begin{equation}
+  F = \dot{m}\,\ve' + (\Pe - \Pa)\,A_e,
+  \label{eq:thrust}
+\end{equation}
+where $\ve'$ is the exit velocity relative to the vehicle. Engineers often fold
+pressure thrust into an \emph{effective} exhaust velocity $\ve$ such that
+\begin{equation}
+  F = \dot{m}\,\ve.
+  \label{eq:F_mdot_ve}
+\end{equation}
+In vacuum ($\Pa=0$) with the usual definitions used in equilibrium performance
+codes, vacuum specific impulse and effective exhaust velocity are related by
+the conventional standard gravity:
+\begin{equation}
+  \boxed{\ve = \Isp\,\gzero, \qquad \gzero = \SI{9.80665}{\metre\per\second\squared}.}
+  \label{eq:ve_isp}
+\end{equation}
+Equation~\eqref{eq:ve_isp} is not a local gravitational acceleration on a
+particular launch pad; it is the metrological convention that converts
+$\Isp$ in seconds to velocity in SI~\citep{bipm_g0}. \pw{} uses this constant
+exactly and tests that $\ve$ fields match $\Isp\times\gzero$ bit-for-bit within
+floating-point expectations.
+
+\section{Specific impulse}
+
+Specific impulse is thrust per unit weight-flow using $\gzero$:
+\begin{equation}
+  \Isp = \frac{F}{\dot{m}\,\gzero} = \frac{\ve}{\gzero}.
+  \label{eq:isp_def}
+\end{equation}
+\cea{} reports shifting (equilibrium composition during expansion) and frozen
+(composition fixed at the throat or chamber, depending on the option) values.
+For ideal cases of practical interest one expects
+\begin{equation}
+  \Isp^{\mathrm{shifting}} \ge \Isp^{\mathrm{frozen}},
+  \qquad
+  \Isp^{\mathrm{vac}} \ge \Isp^{\mathrm{SL}}
+  \label{eq:isp_order}
+\end{equation}
+for the same $\Pc$ and $\eps$. \pw{} asserts these inequalities on locked
+regression cases.
+
+\section{Characteristic velocity}
+
+Characteristic velocity measures chamber energy release and throat delivery,
+independent of the nozzle expansion:
+\begin{equation}
+  \cstar = \frac{\Pc\,A_t}{\dot{m}}.
+  \label{eq:cstar}
+\end{equation}
+In SI, kerolox-class theoretical $\cstar$ is typically of order
+\SIrange{1700}{1900}{\metre\per\second}, not the numerically similar English
+value in ft/s. A recurring software bug class is leaving $\cstar$ in ft/s while
+labelling it m/s; \pw{} converts at the \cea{} adapter and tests SI bands.
+
+\section{Thrust coefficient}
+
+The thrust coefficient links chamber pressure and throat area to thrust:
+\begin{equation}
+  \Cf = \frac{F}{\Pc\,A_t}.
+  \label{eq:cf_def}
+\end{equation}
+Combining \eqref{eq:F_mdot_ve}, \eqref{eq:isp_def}, and \eqref{eq:cstar} yields
+the vacuum identity used throughout the code base:
+\begin{equation}
+  \boxed{\Cf^{\mathrm{vac}} = \frac{\ve^{\mathrm{vac}}}{\cstar} = \frac{\Isp^{\mathrm{vac}}\,\gzero}{\cstar}.}
+  \label{eq:cf_ve_cstar}
+\end{equation}
+\pw{} recomputes and checks \eqref{eq:cf_ve_cstar} both in unit tests and in an
+optional runtime sanity check.
+
+\section{Nozzle area ratio and pressure ratio}
+
+The geometric expansion ratio is
+\begin{equation}
+  \eps = \frac{A_e}{A_t}.
+  \label{eq:eps}
+\end{equation}
+For isentropic flow of a calorically perfect gas one can write closed-form
+Mach--area and pressure ratios in terms of $\gamma$. Real \cea{} products are
+multi-species and temperature-dependent; the code solves equilibrium (or frozen)
+chemistry rather than assuming constant $\gamma$. Still, the perfect-gas
+relations remain useful pedagogy and sanity bounds:
+\begin{align}
+  \frac{A_e}{A_t}
+  &= \frac{1}{M_e}\left[
+      \frac{1+\dfrac{\gamma-1}{2}M_e^{2}}{1+\dfrac{\gamma-1}{2}}
+     \right]^{\frac{\gamma+1}{2(\gamma-1)}},
+  \label{eq:area_mach}\\[0.5em]
+  \frac{\Pc}{\Pe}
+  &= \left(1+\frac{\gamma-1}{2}M_e^{2}\right)^{\frac{\gamma}{\gamma-1}}.
+  \label{eq:pcpe_perfect}
+\end{align}
+\pw{} stores $\Pc$ and $\Pe$ in pascals and verifies that $\Pc/\Pe$ matches the
+ratio reported by the \cea{} path for the same case.
+
+\section{Ideal-gas density check}
+
+At the chamber, a useful consistency check on molecular weight and temperature
+is
+\begin{equation}
+  \rho_c \approx \frac{\Pc\,M_w}{R_u\,T_c},
+  \label{eq:rho_ig}
+\end{equation}
+with $R_u=\SI{8314.462618}{\joule\per\kilo\mole\per\kelvin}$ as coded in
+\pw{}~\citep{codata}. Residual differences can appear when transport or
+multi-phase bookkeeping differs; the automated test tolerates a small relative
+error on a standard LOX/RP-1 point.
+
+\section{Mixture ratio}
+
+The oxidizer-to-fuel mixture ratio on a mass basis is
+\begin{equation}
+  \of = \frac{\dot{m}_{\mathrm{ox}}}{\dot{m}_{\mathrm{fuel}}}.
+  \label{eq:of}
+\end{equation}
+Stoichiometric $\of$ depends on chemistry; maximum vacuum $\Isp$ is usually
+fuel-rich of stoich for carbon-containing fuels. \pw{} can mark stoich on O/F
+plots and can optimise $\of$ numerically for a fixed $\Pc$ and $\eps$.
+
+\section{Liquid bulk density and density impulse}
+
+For tankage- and volume-limited stages, density-weighted performance matters.
+With liquid densities $\rho_f$, $\rho_o$ and mass mixture ratio $\of$,
+\begin{equation}
+  \rho_{\mathrm{bulk}}
+  = \frac{(\of+1)\,\rho_f\,\rho_o}{\of\,\rho_f + \rho_o}
+  \label{eq:rho_bulk}
+\end{equation}
+(standard volume-additive blend of two incompressible liquids). Density impulse
+is then
+\begin{equation}
+  I_{\rho} = \rho_{\mathrm{bulk}}\,\Isp.
+  \label{eq:density_isp}
+\end{equation}
+The $\of$ that maximises $\Isp$ is not always the $\of$ that maximises
+$I_{\rho}$. \pw{} can report both curves and rank propellant pairs by either
+metric.
+
+\section{Shifting versus frozen expansion}
+
+\begin{description}[style=nextline,leftmargin=1.2cm]
+  \item[Shifting (equilibrium)] Composition re-equilibrates as $T$ and $P$ drop
+        in the nozzle. Dissociation energy can recombine, often raising $\Isp$.
+  \item[Frozen] Composition fixed after a defined station (commonly throat).
+        More conservative for some systems; lower $\Isp$ when recombination would
+        have helped.
+\end{description}
+Neither model is ``the flight answer.'' Flight includes kinetics, boundary
+layers, divergence, finite-rate chemistry, and mixture maldistribution.
+Shifting and frozen are brackets on the chemistry story, not a substitute for
+hot-fire data~\citep{sutton2017}.
+
+\section{Optional efficiency factors}
+
+For rough knock-downs toward delivered performance, some workflows multiply
+\begin{equation}
+  \cstar_{\mathrm{eff}} = \eta_{c^{*}}\,\cstar,
+  \qquad
+  C_{f,\mathrm{eff}} = \eta_{C_f}\,C_f,
+  \label{eq:eta}
+\end{equation}
+and recombine into an estimated delivered $\Isp$. In \pw{} these factors are
+explicit knobs, not calibrated engine models. They must not be confused with a
+validated power-balance simulation.
+
+\section{Note on $\gamma$ versus $c_p/c_v$}
+
+\cea{} publishes a performance $\gamma$ used for nozzle relations. Chamber
+transport $c_p$ may include equilibrium dissociation contributions. Therefore
+\begin{equation}
+  \gamma \;\neq\; \frac{c_p}{c_p - R}
+  \label{eq:gamma_not_cp}
+\end{equation}
+exactly is \textbf{expected chemistry}, not evidence of a unit-conversion bug.
+\pw{} documents this distinction so users do not ``fix'' a non-problem.
+
+% =============================================================================
+\chapter{Units and metrology}
+\label{ch:units}
+% =============================================================================
+
+\section{Public SI contract}
+
+Outside the \cea{} adapter, \pw{} exposes:
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Quantity & Unit & Notes \\
+\midrule
+Pressure & \si{\pascal} & also \texttt{pc\_bar} view / input helpers \\
+Temperature & \si{\kelvin} & \\
+Velocity, $\cstar$, $\ve$ & \si{\metre\per\second} & \\
+Density & \si{\kilogram\per\metre\cubed} & \\
+$\Isp$ & \si{\second} & rocketry convention \\
+Density impulse & \si{\second\kilogram\per\metre\cubed} & $\rho\Isp$ \\
+$c_p$ & \si{\joule\per\kilogram\per\kelvin} & \\
+Viscosity & \si{\pascal\second} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+RocketCEA continues to speak English units internally (psia, Rankine, ft/s,
+etc.). Conversion happens once in \texttt{cea\_backend}; public models store SI.
+
+\section{Pressure inputs}
+
+Users may enter chamber pressure as
+\begin{align}
+  \Pc &= \texttt{pc} = \texttt{pc\_pa} && \text{[\si{\pascal}]},\\
+  \Pc &= \texttt{pc\_bar}\times 10^{5} && \text{[bar exact]},\\
+  \Pc &= \texttt{pc\_mpa}\times 10^{6} && \text{[MPa]}.
+\end{align}
+The bar is exact by SI definition:
+\begin{equation}
+  1\,\mathrm{bar} = 10^{5}\,\mathrm{Pa}.
+  \label{eq:bar}
+\end{equation}
+A common student error is \texttt{pc=70} intending 70~bar. That is 70~Pa---near
+vacuum---and produces nonsense. \pw{} rejects pathologically low $\Pc$ values
+that almost always mean ``forgot the unit.''
+
+\section{Constants coded in the library}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Symbol & Value & Role \\
+\midrule
+$\gzero$ & \SI{9.80665}{\metre\per\second\squared} & $\ve=\Isp\gzero$ \\
+$R_u$ & \SI{8314.462618}{\joule\per\kilo\mole\per\kelvin} & ideal-gas $\rho$ check \\
+$1\,\mathrm{bar}$ & \SI{1e5}{\pascal} & \texttt{pc\_bar} \\
+$1\,\mathrm{atm}$ & \SI{101325}{\pascal} & sea-level ambient reference \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{English $\leftrightarrow$ SI (adapter only)}
+
+Representative conversions applied when reading RocketCEA outputs include
+\begin{align}
+  T[\mathrm{K}] &= T[\mathrm{R}]\times\frac{5}{9},\\
+  P[\mathrm{Pa}] &= P[\mathrm{psia}]\times 6894.757293168,\\
+  v[\mathrm{m/s}] &= v[\mathrm{ft/s}]\times 0.3048.
+\end{align}
+Users should not need these at the public API; they are listed for auditability.
+
+% =============================================================================
+\chapter{Software architecture}
+\label{ch:arch}
+% =============================================================================
+
+\section{Design goals}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Library, not ritual} --- importable, version-pinned, testable.
+  \item \textbf{SI wall} --- English units stop at the \cea{} backend.
+  \item \textbf{Typed results} --- Pydantic models; readable \texttt{print(result)}.
+  \item \textbf{Fair trades by default} --- optimise O/F per pair before ranking.
+  \item \textbf{Fail loudly} --- physics identities and pressure guards.
+\end{enumerate}
+
+\section{Layered structure}
+
+Figure~\ref{fig:arch} sketches the call path.
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+  User code / CLI / sibling tool
+              |
+              v
+     Mixture / workflows / units
+              |
+              v
+        Pydantic result models
+              |
+        +-----+------+
+        |            |
+        v            v
+  cea_backend   cantera_backend (frozen gamma)
+  (RocketCEA)         |
+        |             |
+        +------+------+
+               |
+               v
+        SQLite cache (~/.propwrap/)
+\end{verbatim}
+\caption{Logical architecture of \pw{}. Public code never re-implements
+equilibrium chemistry; it orchestrates RocketCEA/Cantera and polices units.}
+\label{fig:arch}
+\end{figure}
+
+\section{Major modules}
+
+\begin{center}
+\begin{tabular}{@{}p{3.6cm}p{10.2cm}@{}}
+\toprule
+Module & Responsibility \\
+\midrule
+\texttt{propellant.py} & \texttt{Mixture} primary API; evaluate, sweeps, studies \\
+\texttt{cea\_backend.py} & RocketCEA calls; English$\to$SI conversion \\
+\texttt{cantera\_backend.py} & Frozen $\gamma$ from mapped major species \\
+\texttt{models.py} & Pydantic result types (\texttt{PerformanceResult}, \ldots) \\
+\texttt{units.py} & Constants and converters \\
+\texttt{workflows.py} & \texttt{characterize}, \texttt{compare\_propellants}, blends \\
+\texttt{trades.py} & Optimum-O/F trades; density-Isp curves \\
+\texttt{registry.py} & Names, aliases, densities, cryo defaults \\
+\texttt{blends.py} & Multi-component weight-percent cards \\
+\texttt{cache.py} & SQLite result cache \\
+\texttt{cli.py} / \texttt{\_\_main\_\_.py} & Console entry points \\
+\texttt{reports.py} & Markdown/CSV lab packs \\
+\texttt{plotting.py} & Optional dark-theme figures (matplotlib) \\
+\texttt{sanity.py} & Runtime physics identity checks \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Dependencies}
+
+Hard dependencies of version~0.1.x:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{rocketcea} --- NASA~\cea{} FORTRAN via Python~\citep{rocketcea}
+  \item \textbf{cantera} --- optional-use cross-check path; required install~\citep{cantera}
+  \item \textbf{pydantic} $\geq 2$ --- result models
+  \item \textbf{numpy}, \textbf{matplotlib} --- numerics and plotting
+\end{itemize}
+
+\section{Caching}
+
+Repeated identical cases hit a local SQLite database under
+\texttt{\textasciitilde/.propwrap/}. Cache keys include propellant identities,
+$\of$, $\Pc$, $\eps$, and relevant options. Cache invalidation is available via
+CLI and API. Caching never changes physics; it only avoids re-entering \cea{}.
+
+% =============================================================================
+\chapter{Public interface and workflows}
+\label{ch:api}
+% =============================================================================
+
+\section{Installation}
+
+From PyPI (recommended):
+\begin{lstlisting}
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+pip install propwrap
+propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+\end{lstlisting}
+
+Requires Python~3.10+. On multi-Python Windows machines, prefer
+\texttt{py -3.12 -m pip install propwrap} so an old 3.9 \texttt{pip} is not used.
+
+\section{Minimal Python usage}
+
+\begin{lstlisting}
+from propwrap import Mixture, compare_propellants, convert
+
+m = Mixture("RP-1", "LOX")
+r = m.evaluate(of=2.56, pc_bar=70, eps=20)
+print(r.isp_vac_shifting, r.ve_vac_shifting, r.c_star)
+
+sw = m.scan_of((2.0, 3.2, 0.1), pc_bar=70, eps=20)
+print(sw.optimum().of_ratio)
+
+print(compare_propellants(
+    ["RP-1/LOX", "CH4/LOX", "LH2/LOX"],
+    pc_bar=70, eps=40,
+))
+print(convert(70, "bar", "Pa"))
+\end{lstlisting}
+
+Representative LOX/RP-1 point at $\of=2.56$, $\Pc=70\,\mathrm{bar}$,
+$\eps=20$ (theoretical shifting vacuum):
+\begin{equation}
+  \Isp^{\mathrm{vac}} \approx \SI{343.7}{\second},\quad
+  \ve \approx \SI{3370}{\metre\per\second},\quad
+  \cstar \approx \SI{1798}{\metre\per\second}.
+  \label{eq:kerolox_demo}
+\end{equation}
+
+\section{Primary API surface (stable for 0.1.x)}
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{Mixture} / \texttt{Propellant} --- evaluate, \texttt{scan\_of},
+        density impulse, gamma profiles
+  \item \texttt{compare\_propellants}, \texttt{characterize}, \texttt{define\_blend}
+  \item \texttt{convert}, \texttt{propwrap.units}
+  \item \texttt{PerformanceResult} fields documented in the API reference
+  \item CLI: \texttt{run}, \texttt{scan-of}, \texttt{characterize},
+        \texttt{compare-pairs}, \texttt{homework}, \ldots
+\end{itemize}
+
+May still change within 0.1.x: plot styling, Cantera cross-check details,
+efficiency-knob presentation, internal cache layout.
+
+\section{Fair multi-pair trades}
+
+A trade that ranks LOX/LH$_2$ against LOX/RP-1 at the same $\of=2.5$ is not a
+propellant trade; it is a self-inflicted handicap on one chemistry. The default
+workflow is:
+
+\begin{enumerate}[leftmargin=*]
+  \item Fix $\Pc$ and $\eps$ (mission-class assumptions).
+  \item For each pair, scan $\of$ and take the optimum (e.g.\ max vacuum
+        shifting $\Isp$ or max $\rho\Isp$).
+  \item Rank pairs on the chosen metric.
+\end{enumerate}
+
+That is what \texttt{compare\_propellants} encodes.
+
+\section{Command-line interface}
+
+\begin{lstlisting}[language=bash]
+propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+propwrap scan-of RP-1 LOX --pc-bar 70 --eps 20 --range 2.0 3.5 0.1
+propwrap compare-pairs --combos "RP-1/LOX,LH2/LOX,CH4/LOX" --pc-bar 70 --eps 40
+propwrap homework kerolox --name YourName
+\end{lstlisting}
+Module form (0.1.1+): \texttt{python -m propwrap \ldots}
+
+\section{Student tooling}
+
+Coursework environments rarely match research desktops. \pw{} ships:
+
+\begin{itemize}[leftmargin=*]
+  \item Install notes for lab PCs
+  \item Beginner walkthrough and concept notes (units, frozen/shifting, fair trades)
+  \item One-page cheat sheet and sample lab assignment
+  \item \texttt{propwrap homework} packs: summary, assumptions, CSV, figures
+  \item Case presets: student lab / booster / upper stage
+\end{itemize}
+
+% =============================================================================
+\chapter{Validation}
+\label{ch:validation}
+% =============================================================================
+
+\section{What is claimed}
+
+\begin{center}
+\begin{tabular}{@{}p{7.2cm}cc@{}}
+\toprule
+Claim & Supported? & Mechanism \\
+\midrule
+Match RocketCEA/\cea{} for same inputs & Yes & Bit-level $\Isp$ tests \\
+SI public units & Yes & Guards + $\rho$ check \\
+$\ve=\Isp\gzero$ & Yes & Identity tests \\
+$\Cf^{\mathrm{vac}}=\ve/\cstar$ & Yes & Identity tests \\
+$\Pc/\Pe$ consistency & Yes & Identity tests \\
+Equal to flight Merlin / RS-25 $\Isp$ & No & Explicitly excluded \\
+Cantera $\gamma$ identical to \cea{} & No & Approximate frozen compare \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Primary sources}
+
+\subsection{NASA CEA methodology}
+
+Gordon and McBride, NASA RP-1311 Parts~I and~II~\citep{gordon1994cea,gordon1996cea},
+define the equilibrium/frozen rocket performance problem. \pw{} does not
+re-derive the chemistry solver; it wraps the industry-standard implementation
+and owns API integrity.
+
+\subsection{RocketCEA published goldens}
+
+The RocketCEA QuickStart publishes LOX/LH$_2$ vacuum $\Isp$ at
+$\Pc=\SI{100}{psia}$, $\eps=40$~\citep{rocketcea}. \pw{} matches
+\texttt{CEA\_Obj.get\_Isp} to machine precision for O/F~$=2\ldots 8$ on the
+locked stack (verified 2026-07-29).
+
+\begin{table}[H]
+\centering
+\caption{LOX/LH$_2$ golden vacuum $\Isp$ (RocketCEA docs conditions).}
+\label{tab:lox_lh2_gold}
+\begin{tabular}{@{}rrr@{}}
+\toprule
+O/F & $\Isp^{\mathrm{vac}}$ [s] & Role \\
+\midrule
+default \texttt{get\_Isp} & 374.3036\ldots & install smoke \\
+2 & 424.36 & fuel-rich \\
+4 & 453.13 & \\
+5 & 453.24 & near peak \\
+6 & 448.19 & \\
+8 & 424.70 & ox-rich \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Metrology}
+
+$\gzero$ and the exact bar follow BIPM/SI conventions~\citep{bipm_g0}.
+
+\section{Physics identities (must not drift)}
+
+Automated tests (\texttt{tests/test\_physics\_identities.py}) lock:
+
+\begin{enumerate}[leftmargin=*]
+  \item Equation~\eqref{eq:ve_isp}
+  \item Equation~\eqref{eq:cf_ve_cstar}
+  \item $\Pc/\Pe$ vs stored pressures
+  \item Chamber density check~\eqref{eq:rho_ig}
+  \item $T_e < T_t < T_c$
+  \item Typical $\gamma_e \ge \gamma_c$
+  \item Shifting $\ge$ frozen; vac $\ge$ SL on locked cases
+  \item $\cstar$ SI magnitude band
+  \item Density impulse product~\eqref{eq:density_isp}
+\end{enumerate}
+
+\subsection{Bug fixed during physics audit}
+
+\texttt{gamma\_and\_temp\_at\_eps} previously returned exit temperature twice
+instead of chamber and exit. The bug is fixed and covered by tests (audit date
+2026-07-29).
+
+\section{Multi-propellant regression matrix}
+
+Representative theoretical anchors (CEA via RocketCEA; not flight):
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Pair & O/F & $\Pc$ & $\eps$ & $\Isp^{\mathrm{vac}}$ (shift.) \\
+\midrule
+RP-1/LOX & 2.56 & 70~bar & 20 & $\sim$343.7~s \\
+RP-1/LOX & 2.3 & $\sim$1000~psia & 40 & $\sim$352.3~s \\
+LH$_2$/LOX & 5.0 & $\sim$1000~psia & 40 & $\sim$454.9~s \\
+LH$_2$/LOX (RS-25-class) & 5.5 & 100~bar & 69 & $\sim$463.7~s \emph{theory} \\
+CH$_4$/LOX & 3.2 & $\sim$1000~psia & 40 & $\sim$367.6~s \\
+MMH/N$_2$O$_4$ & 2.0 & $\sim$1000~psia & 40 & $\sim$338.6~s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Flight contrast (not used as code targets):}
+RS-25 delivered vacuum $\Isp$ is about \SI{452}{\second}; pure CEA at similar
+class conditions sits higher. Merlin-class flight kerolox $\Isp$ is well below
+pure theoretical CEA. Mixing the two without labelling is a documentation
+failure; the catalog marks the gap deliberately.
+
+\section{Test suite}
+
+On the development stack, the full suite reports on the order of \textbf{132}
+passing tests spanning physics identities, validation catalog, known values,
+units, cache, sweeps, registry/trades, student helpers, and UX guards.
+
+\begin{lstlisting}[language=bash]
+pytest tests/test_physics_identities.py tests/test_validation_suite.py -v
+pytest -q
+\end{lstlisting}
+
+% =============================================================================
+\chapter{Worked examples}
+\label{ch:examples}
+% =============================================================================
+
+\section{Single-point kerolox}
+
+\textbf{Inputs:} RP-1 / LOX, $\of=2.56$, $\Pc=70\,\mathrm{bar}$, $\eps=20$.
+
+\textbf{Outputs (theoretical shifting, representative run):}
+$\Isp^{\mathrm{vac}}\approx\SI{343.7}{\second}$,
+$\ve\approx\SI{3370}{\metre\per\second}$,
+$\cstar\approx\SI{1798}{\metre\per\second}$,
+$T_c\sim\SI{3670}{\kelvin}$ class,
+$\Pc$ stored as \SI{7e6}{\pascal}.
+
+\textbf{Use:} classroom baseline; regression lock REG-RP1-LOX-70bar-eps20.
+
+\section{O/F sweep}
+
+Scan $\of\in[2.0,3.2]$ at fixed $\Pc$, $\eps$; locate maximum vacuum shifting
+$\Isp$ and optionally maximum $\rho\Isp$. Expect the $\Isp$ peak fuel-rich of
+stoichiometric for kerolox-class chemistry.
+
+\section{Fair three-pair trade}
+
+Compare RP-1/LOX, CH$_4$/LOX, and LH$_2$/LOX at the same $\Pc$ and $\eps$, each
+at its own optimum $\of$. LH$_2$ leads on $\Isp$; dense hydrocarbons lead on
+$\rho\Isp$. Both rankings are valid---they answer different vehicle questions.
+
+\section{Homework pack}
+
+\begin{lstlisting}[language=bash]
+propwrap homework kerolox --name Ada
+\end{lstlisting}
+Produces summary markdown, assumptions text, CSV tables, and figures suitable
+for a lab report without rebuilding a plotting stack from scratch.
+
+% =============================================================================
+\chapter{Limitations and responsible use}
+\label{ch:limits}
+% =============================================================================
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Ideal 1-D \cea{}} --- no kinetics, multiphase losses, injector
+        efficiency, or nozzle divergence losses unless the user adds them.
+  \item \textbf{Shifting/frozen brackets} --- flight sits elsewhere.
+  \item \textbf{Efficiency knobs} --- rough, not a validated engine model.
+  \item \textbf{Custom propellant cards} --- structure-checked, not
+        thermodynamically certified by this project.
+  \item \textbf{Licensing} --- MIT for \pw{}; review RocketCEA (GPL-family) and
+        other dependencies before proprietary shipping.
+  \item \textbf{Not flight-qualified software.}
+  \item \textbf{No agency affiliation.}
+\end{enumerate}
+
+If a number will appear in a design review, label it \emph{theoretical CEA} or
+\emph{estimated with $\eta$}, and keep hot-fire / flight data in a separate
+column.
+
+% =============================================================================
+\chapter{Conclusions}
+% =============================================================================
+
+\pw{} packages a well-known physics engine (NASA~\cea{} via RocketCEA) behind a
+modern Python interface that prefers SI units, typed results, and fair
+propellant trades. The contribution is not a new chemistry model; it is
+engineering hygiene: conversions that do not drift, identities that fail tests
+when broken, and workflows that make correct comparisons convenient.
+
+Version~0.1.x is suitable for education, early trade studies, and as a
+propellant backbone under other tools. It is not a substitute for detailed
+engine design analysis or certification evidence. With that boundary understood,
+the library does the job it claims: give the same theoretical propellant numbers
+tomorrow that it gave today, in units a SI codebase can trust.
+
+% =============================================================================
+\begin{thebibliography}{99}
+
+\bibitem{gordon1994cea}
+S.~Gordon and B.~J.~McBride,
+\emph{Computer Program for Calculation of Complex Chemical Equilibrium
+Compositions and Applications, I.~Analysis},
+NASA Reference Publication 1311, 1994.
+NTRS: \url{https://ntrs.nasa.gov/citations/19950013764}.
+
+\bibitem{gordon1996cea}
+S.~Gordon and B.~J.~McBride,
+\emph{Computer Program for Calculation of Complex Chemical Equilibrium
+Compositions and Applications, II.~Users Manual and Program Description},
+NASA Reference Publication 1311, 1996.
+
+\bibitem{rocketcea}
+C.~Taylor / Applied Python,
+\emph{RocketCEA} documentation and QuickStart goldens,
+\url{https://rocketcea.readthedocs.io/}.
+
+\bibitem{cantera}
+D.~G.~Goodwin, H.~K.~Moffat, I.~Schoegl, R.~L.~Speth, and B.~W.~Weber,
+\emph{Cantera: An object-oriented software toolkit for chemical kinetics,
+thermodynamics, and transport processes},
+\url{https://www.cantera.org}.
+
+\bibitem{sutton2017}
+G.~P.~Sutton and O.~Biblarz,
+\emph{Rocket Propulsion Elements}, 9th~ed.,
+John Wiley \& Sons, 2017.
+
+\bibitem{huzel1992}
+D.~K.~Huzel and D.~H.~Huang,
+\emph{Modern Engineering for Design of Liquid-Propellant Rocket Engines},
+AIAA Progress in Astronautics and Aeronautics, Vol.~147, 1992.
+
+\bibitem{bipm_g0}
+BIPM / CGPM,
+conventional standard acceleration due to gravity
+$\gzero=\SI{9.80665}{\metre\per\second\squared}$,
+International System of Units (SI) documentation,
+\url{https://www.bipm.org/}.
+
+\bibitem{codata}
+CODATA recommended values of the fundamental physical constants
+(universal gas constant as used in software checks).
+
+\bibitem{propwrap_repo}
+S.~K.~V.,
+\emph{propwrap} source repository,
+\url{https://github.com/shanthoshkv/propwrap}.
+
+\bibitem{propwrap_site}
+S.~K.~V.,
+\emph{propwrap} project website,
+\url{https://aboutkvs.vercel.app/propwrap.html}.
+
+\bibitem{propwrap_pypi}
+\emph{propwrap} on the Python Package Index,
+\url{https://pypi.org/project/propwrap/}.
+
+\end{thebibliography}
+
+% =============================================================================
+\appendix
+\chapter{Package layout}
+\begin{verbatim}
+propwrap/
+  pyproject.toml
+  README.md
+  LICENSE
+  src/propwrap/          # library
+  tests/                 # pytest suite + validation_catalog.json
+  docs/                  # user docs + this report
+  examples/              # runnable scripts
+  website/               # single-file HTML site
+\end{verbatim}
+
+\chapter{Document control}
+\begin{center}
+\begin{tabular}{@{}llp{7.5cm}@{}}
+\toprule
+Version & Date & Notes \\
+\midrule
+0.1 & 2026-07-30 & Initial technical report aligned with software v0.1.3 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+\noindent\textit{End of report.}
+
+\end{document}

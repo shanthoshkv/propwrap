@@ -44,6 +44,8 @@ class PerformanceResult(BaseModel):
     """Performance at one operating point — SI public units.
 
     Isp remains in seconds (rocketry standard); ve_* gives m/s (Isp · g0).
+    Isp/ve fields are IDEAL (CEA); c_star and cf_* carry eta_cstar/eta_cf;
+    *_delivered fields carry both.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -86,6 +88,7 @@ class PerformanceResult(BaseModel):
     density_basis: str | None = None
     isp_vac_delivered: float | None = None
     isp_sl_delivered: float | None = None
+    ve_vac_delivered: float | None = None  # m/s, ve_vac_shifting * eta_cstar * eta_cf
     eta_cstar: float | None = None
     eta_cf: float | None = None
     warnings: list[str] = Field(default_factory=list)
@@ -122,6 +125,41 @@ class PerformanceResult(BaseModel):
         from propwrap.reports import performance_to_markdown
 
         return performance_to_markdown(self, heading=heading)
+
+    def _repr_markdown_(self) -> str:  # Jupyter rich display
+        return self.to_markdown()
+
+    def size(self, thrust_n: float, *, sea_level: bool = False) -> dict[str, float]:
+        """Throat/exit diameters and mass flows for a thrust [N]."""
+        from propwrap.engine import size_engine
+
+        return size_engine(self, thrust_n, sea_level=sea_level)
+
+    def gamma_frozen_cantera(self) -> float | None:
+        """Independent frozen chamber γ from Cantera, or None if unavailable."""
+        if self.chamber is None or not self.chamber.species_mole_fractions:
+            return None
+        try:
+            import warnings
+
+            from propwrap.cantera_backend import gamma_frozen
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return gamma_frozen(
+                    self.tc_kelvin, self.pc_pa, self.chamber.species_mole_fractions
+                )
+        except (ImportError, ValueError, RuntimeError):
+            return None
+
+    def plot_stations(self, *, save: str | None = None, show: bool = False) -> Figure:
+        from propwrap.display import maybe_close, maybe_show
+        from propwrap.plotting import plot_stations
+
+        fig = plot_stations(self, save_path=save)
+        maybe_show(fig, show)
+        maybe_close(fig, show)
+        return fig
 
     def __str__(self) -> str:
         return self.summary()
@@ -254,6 +292,41 @@ class SweepResult(BaseModel):
         from propwrap.export import sweep_to_json
 
         sweep_to_json(self, path)
+
+    def to_dataframe(self) -> Any:
+        """One row per sample as a pandas DataFrame (requires ``pandas``)."""
+        from propwrap.errors import require
+
+        pd = require("pandas", "pandas")
+        return pd.DataFrame(
+            [r.model_dump(exclude={"chamber", "throat", "exit"}) for r in self.results]
+        )
+
+    def to_excel(self, path: str) -> None:
+        """Write samples to .xlsx (requires ``pandas`` + ``openpyxl``: ``pip install propwrap[excel]``)."""
+        df = self.to_dataframe()
+        df["warnings"] = df["warnings"].map("; ".join)
+        df.to_excel(path, index=False)
+
+    def _repr_markdown_(self) -> str:  # Jupyter rich display
+        rows = ["| value | Isp vac [s] | Isp SL [s] | Tc [K] | c* [m/s] |", "|---|---|---|---|---|"]
+        rows += [
+            f"| {v:g} | {r.isp_vac_shifting:.1f} | {r.isp_sl_shifting:.1f} "
+            f"| {r.tc_kelvin:.0f} | {r.c_star:.0f} |"
+            for v, r in zip(self.values, self.results)
+        ]
+        return f"**Sweep `{self.sweep_variable}`**\n\n" + "\n".join(rows)
+
+    def plot_species(
+        self, *, station: str = "chamber", save: str | None = None, show: bool = False
+    ) -> Figure:
+        from propwrap.display import maybe_close, maybe_show
+        from propwrap.plotting import plot_species
+
+        fig = plot_species(self, station=station, save_path=save)
+        maybe_show(fig, show)
+        maybe_close(fig, show)
+        return fig
 
 
 class MixtureStudy(BaseModel):
@@ -404,6 +477,9 @@ class TradeResult(BaseModel):
 
     def summary(self) -> str:
         return self.summary_table()
+
+    def _repr_markdown_(self) -> str:  # Jupyter rich display
+        return self.to_markdown()
 
     def to_markdown(self, *, heading: str = "Propellant trade") -> str:
         from propwrap.reports import trade_to_markdown
