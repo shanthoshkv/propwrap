@@ -180,3 +180,4 @@ propwrap_custom_*/
 pypi token.txt
 *token*.txt
 !tests/baseline/*.png
+!website/img/*.png

@@ -13,9 +13,16 @@
 
 Project site: **[aboutkvs.vercel.app/propwrap.html](https://aboutkvs.vercel.app/propwrap.html)** (mirrored in this repo at [`website/`](https://github.com/shanthoshkv/propwrap/tree/main/website), preview with `python -m http.server 8080 --directory website`).
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/isp_map.png" alt="Vacuum Isp over O/F and chamber pressure for RP-1/LOX, made with propwrap" width="860">
+  <br><sub>One call: <code>Mixture("RP-1","LOX").isp_map((1.8, 3.6, 0.1), (20, 200, 10), eps=20)</code>. Dashed line is the best O/F at each pressure.</sub>
+</p>
+
 ---
 
 ## What this project is
+
+I started propwrap because every propulsion course project I did began the same way: a half-working CEA script, a spreadsheet of unit conversions, and a nagging doubt about whether `ft/s` had snuck into a `m/s` column somewhere. This library is the thing I wished I'd had at the start. You name a fuel and an oxidizer, ask for a point or a sweep, and get numbers back in SI that you can paste straight into the next calculation.
 
 `propwrap` is a **pip-installable library** for defining liquid propellant systems and computing their **ideal thermochemical performance**:
 
@@ -71,6 +78,53 @@ You (script, CLI, or sibling tool)
 
 ---
 
+## What it produces
+
+Everything below came out of the library itself (RP-1/LOX, Pc = 70 bar, LOX at 90 K). Plots use a dark theme by default; `set_theme("light")` or `--theme light` gives print-friendly output. Output is 300 dpi PNG.
+
+### O/F sweep
+
+The first thing most people want: where is the best mixture ratio, and how much does it cost to miss it? The shaded band is the gain from shifting equilibrium over frozen composition, the dotted line is stoichiometric.
+
+<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/of_sweep.png" alt="O/F sweep: shifting and frozen Isp, sea-level Isp and chamber temperature" width="860"></p>
+
+```python
+m = Mixture("RP-1", "LOX", fuel_temp_k=298.15, ox_temp_k=90.17)
+m.scan_of((1.8, 3.6, 0.1), pc_bar=70, eps=20).plot(save="of_sweep.png")
+```
+
+### Nozzle and altitude behaviour
+
+Left: how Isp and thrust coefficient grow with expansion ratio, with the point where exit pressure equals ambient and the Summerfield separation limit marked. Right: the same fixed nozzle flown through the US Standard 1976 atmosphere.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/eps_sweep.png" alt="Area-ratio sweep" width="425">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/altitude.png" alt="Isp vs altitude" width="425">
+</p>
+
+### Pressure and composition
+
+Chamber pressure pays off quickly then flattens out. The species plot shows what the flame is actually made of as you go richer: CO2 gives way to CO and H2.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/pc_sweep.png" alt="Chamber pressure sweep" width="425">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/species.png" alt="Chamber species mole fractions vs O/F" width="425">
+</p>
+
+### Fair propellant trades
+
+Comparing propellants at one shared O/F is a classic mistake. `compare_propellants` runs each pair at its own optimum and reports Isp, density impulse, flame temperature and c* side by side. Note how LH2/LOX wins on Isp and loses badly on density impulse.
+
+<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/compare.png" alt="Propellant comparison bars" width="860"></p>
+
+### Station properties
+
+One evaluation also gives you the gas state at chamber, throat and exit, which is what you need to start thinking about nozzle contours or heat loads.
+
+<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/stations.png" alt="Temperature, pressure, gamma and molar mass at each station" width="860"></p>
+
+---
+
 ## Features
 
 - **Beginner-friendly API** — `Mixture.evaluate()`, `print(result)`, optional plots  
@@ -82,7 +136,10 @@ You (script, CLI, or sibling tool)
 - **Registry** — densities, cryo defaults, storability, name aliases  
 - **Blends** — multi-component wt% fuels/oxs  
 - **Density-Isp** — ρ·Isp curves and rankings  
-- **CLI** — `propwrap run`, `scan-of`, `characterize`, `compare-pairs`, …  
+- **CLI** — `run`, `scan-of`, `map`, `altitude`, `throttle`, `info`, `doctor`, `characterize`, `compare-pairs`, …  
+- **First-cut sizing** — thrust to mass flow, throat and exit diameter; altitude and throttle tables  
+- **Parallel sweeps** — `workers=4` on any sweep or Isp map  
+- **Jupyter and Excel** — results render as tables; `to_dataframe()` and `to_excel()`  
 - **Validation** — goldens + regression + physics checks  
 
 ---
@@ -101,7 +158,16 @@ python -m venv .venv
 pip install "propwrap[all]"   # core only: pip install propwrap
 ```
 
-Required dependencies (installed automatically): **rocketcea**, **cantera**, **pydantic≥2**, **matplotlib**, **numpy**.
+The core install is deliberately light: **rocketcea**, **pydantic≥2** and **numpy**. Everything else is an extra, and you get a friendly install hint if you use a feature whose extra is missing:
+
+| Extra | Adds |
+|-------|------|
+| `propwrap[plot]` | matplotlib figures |
+| `propwrap[cantera]` | frozen-γ cross-check |
+| `propwrap[excel]` | pandas + openpyxl for `to_excel()` |
+| `propwrap[all]` | all of the above |
+
+Not sure your setup is right? Run `propwrap doctor`. It checks each package, whether the RocketCEA data folder is writable, and runs one sample point.
 
 ```bash
 propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
@@ -162,6 +228,27 @@ Legacy names still work: `Propellant`, `performance(of, pc_bar, eps)` with **bar
 
 ---
 
+## From propellant to hardware numbers (new in 0.2)
+
+Once you have a performance point, the next question is always "so how big is the engine?". `size_engine` turns thrust into flow rates and geometry using the CEA result, with no hidden fudge factors. For a 1 MN sea-level RP-1/LOX engine at 70 bar and ε = 20, you get about a **339 mm throat** and a 1.52 m exit, at 351 kg/s total flow.
+
+```python
+r = m.evaluate(of=2.56, pc_bar=70, eps=20)
+r.size(1e6, sea_level=True)
+# {'mdot_kg_s': 350.9, 'mdot_ox_kg_s': 252.4, 'mdot_fuel_kg_s': 98.6,
+#  'throat_diameter_m': 0.339, 'exit_diameter_m': 1.515, 'isp_s': 290.6, ...}
+
+from propwrap import altitude_performance, throttle
+altitude_performance(m, 2.56, 7e6, 20, [0, 5e3, 10e3, 30e3, 80e3])
+throttle(m, 2.56, 7e6, 20, 1e6)      # fixed geometry, Pc scaled down
+```
+
+`throttle` also flags when the nozzle is likely to separate (Pe/Pamb below 0.4, the Summerfield rule of thumb). The ε = 20 nozzle above sits at 0.41 at full power, so any throttling at sea level crosses the line. That is a first-cut screen, not a flow-separation model.
+
+If you set efficiencies on the mixture (`eta_cstar`, `eta_cf`), sizing uses the delivered Isp and c* rather than the ideal ones.
+
+---
+
 ## CLI
 
 Plots are **off** unless you pass `--plot` or `--save`.
@@ -180,7 +267,19 @@ propwrap list --cryogenic
 propwrap clear-cache
 ```
 
-Add `--json` for machine-readable output.
+New in 0.2:
+
+```bash
+propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20 --thrust 1e6 --sea-level   # adds engine sizing
+propwrap scan-of RP-1 LOX --pc-bar 70 -j 4 --species --xlsx scan.xlsx           # parallel, Excel out
+propwrap map RP-1 LOX --of-range 1.8 3.6 0.1 --pc-range 20 200 10 --eps 20 -j 4   # O/F x Pc Isp contour
+propwrap altitude RP-1 LOX --of 2.56 --pc-bar 70 --eps 20 --save alt.png        # Isp vs altitude
+propwrap throttle RP-1 LOX --of 2.56 --pc-bar 70 --eps 20 --thrust 1e6        # throttle table + separation flag
+propwrap info CH4                      # properties + stoichiometric O/F with LOX
+propwrap doctor                        # check the install
+```
+
+Global options: `--theme light` for print-ready plots and `--config case.toml` to keep a case in a file (keys are the argparse names, e.g. `pc_bar = 70`). Add `--json` for machine-readable output; hints go to stderr so JSON stays clean.
 
 ---
 
@@ -292,6 +391,8 @@ pytest -q
 | Document | Audience |
 |----------|----------|
 | **[docs/how_to_use.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/how_to_use.md)** | **Beginners — start here** |
+| [Docs site](https://shanthoshkv.github.io/propwrap/) | Generated API reference |
+| [examples/quickstart.ipynb](https://colab.research.google.com/github/shanthoshkv/propwrap/blob/main/examples/quickstart.ipynb) | Run it in Colab, nothing to install |
 | [README.md](https://github.com/shanthoshkv/propwrap/blob/main/README.md) | Overview (this file) |
 | [docs/api_reference.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/api_reference.md) | API field/method list |
 | [docs/validation.md](https://github.com/shanthoshkv/propwrap/blob/main/docs/validation.md) | Validation report |
@@ -350,9 +451,9 @@ python examples/lox_ch4_case.py
 
 ---
 
-## Stable API (0.1.x)
+## Stable API (0.2.x)
 
-Treat these as stable across 0.1.x patch releases:
+Treat these as stable across 0.2.x patch releases:
 
 | Surface | Examples |
 |---------|----------|
@@ -372,9 +473,10 @@ May still change: Cantera cross-check details, plot styling, η efficiency knobs
 2. **Shifting vs frozen** — reality is between the two.  
 3. **Theoretical ≠ delivered** — optional `efficiency=(ηc*, ηCf)` is rough only.  
 4. **Custom cards** — validated for structure, not thermodynamic realism.  
-5. **Cantera γ** — approximate major-species frozen compare (Cantera is a required dependency).  
-6. **RocketCEA** is GPL-family; this repo’s own code is MIT — review licenses for proprietary products.  
-7. **Not flight-certified.**
+5. **Cantera γ** — approximate major-species frozen compare (optional `cantera` extra). CEA's chamber γ is the equilibrium value while Cantera's is frozen, so expect them to differ.  
+6. **Sizing and throttling are first-cut** — ideal-gas CEA numbers plus a standard atmosphere, no losses beyond the efficiencies you supply.  
+7. **RocketCEA** is GPL-family; this repo’s own code is MIT — review licenses for proprietary products.  
+8. **Not flight-certified.**
 
 ---
 
