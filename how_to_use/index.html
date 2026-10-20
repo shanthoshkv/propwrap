@@ -1,0 +1,2540 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://shanthoshkv.github.io/propwrap/how_to_use/">
+      
+      
+      
+        <link rel="next" href="../INSTALL/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Home - propwrap</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-use-propwrap-beginner-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="propwrap" class="md-header__button md-logo" aria-label="propwrap" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            propwrap
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/shanthoshkv/propwrap" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="propwrap" class="md-nav__button md-logo" aria-label="propwrap" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    propwrap
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/shanthoshkv/propwrap" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install first
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-propwrap-in-plain-english" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is propwrap in plain English?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-need-on-your-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you need on your computer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-install-do-this-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1 — Install (do this once)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1 — Install (do this once)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-create-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Create a “virtual environment”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-install-propwrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Install propwrap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-check-that-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Check that it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-words-you-will-see-mini-glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2 — Words you will see (mini glossary)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2 — Words you will see (mini glossary)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#units-in-propwrap-important" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Units in propwrap (important)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-your-first-python-script-copy-paste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3 — Your first Python script (copy-paste)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3 — Your first Python script (copy-paste)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-you-should-see" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you should see
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-individual-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read individual numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-the-main-object-mixture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4 — The main object: Mixture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4 — The main object: Mixture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-methods-what-to-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common methods (what to call)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plots-are-off-by-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plots are off by default
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-everyday-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5 — Everyday recipes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5 — Everyday recipes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recipe-a-just-give-me-isp-for-this-mix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe A — “Just give me Isp for this mix”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-b-what-of-is-best-for-vacuum-isp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe B — “What O/F is best for vacuum Isp?”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-c-compare-rp-1-vs-methane-vs-hydrogen-fairly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe C — “Compare RP-1 vs methane vs hydrogen fairly”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-d-density-impulse-tank-volume-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe D — “Density impulse (tank volume matters)”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-e-im-studying-methane-methalox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe E — “I’m studying methane (methalox)”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-f-blend-two-fuels-example-m20-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe F — “Blend two fuels (example M20-style)”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-g-i-think-in-bar-but-i-need-pascals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe G — “I think in bar, but I need pascals”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-h-dont-make-me-type-pc-and-eps-every-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe H — “Don’t make me type pc and eps every time”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-6-using-the-command-line-no-python-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 6 — Using the command line (no Python file)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 6 — Using the command line (no Python file)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#one-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-for-other-programs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON (for other programs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan O/F
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-propellants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare propellants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list-propellants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List propellants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clear-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clear cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-7-understanding-the-output-what-to-trust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 7 — Understanding the output (what to trust)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 7 — Understanding the output (what to trust)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shifting-vs-frozen-isp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shifting vs frozen Isp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vacuum-vs-sea-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vacuum vs sea-level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warnings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-details-advanced-but-useful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chamber details (advanced but useful)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-8-looking-up-propellant-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 8 — Looking up propellant data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-9-examples-that-ship-with-the-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 9 — Examples that ship with the project
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-10-common-mistakes-and-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 10 — Common mistakes (and fixes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-11-minimal-mental-model-of-a-good-first-study" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 11 — Minimal mental model of “a good first study”
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modulenotfounderror-no-module-named-propwrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModuleNotFoundError: No module named 'propwrap'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#propwrap-is-not-recognized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        propwrap is not recognized
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-fails-on-rocketcea-cantera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install fails on RocketCEA / Cantera
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results-look-insane-isp-thousands-tc-millions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results look insane (Isp thousands, Tc millions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i-changed-a-custom-propellant-card-but-get-old-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I changed a custom propellant card but get old numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-go-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to go next
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-page-cheat-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-page cheat sheet
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cheat_sheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cheat sheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../colab/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Learning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning path (engineering students)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learning/01_units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Units (the #1 student trap)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learning/02_frozen_vs_shifting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frozen vs shifting equilibrium
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learning/03_fair_propellant_trades/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fair propellant trades
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learning/04_faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ (students)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install first
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-propwrap-in-plain-english" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is propwrap in plain English?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-need-on-your-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you need on your computer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-install-do-this-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1 — Install (do this once)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1 — Install (do this once)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-create-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Create a “virtual environment”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-install-propwrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Install propwrap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-check-that-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Check that it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-words-you-will-see-mini-glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2 — Words you will see (mini glossary)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2 — Words you will see (mini glossary)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#units-in-propwrap-important" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Units in propwrap (important)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-your-first-python-script-copy-paste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3 — Your first Python script (copy-paste)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3 — Your first Python script (copy-paste)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-you-should-see" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you should see
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-individual-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read individual numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-the-main-object-mixture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4 — The main object: Mixture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4 — The main object: Mixture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-methods-what-to-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common methods (what to call)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plots-are-off-by-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plots are off by default
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-everyday-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5 — Everyday recipes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5 — Everyday recipes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recipe-a-just-give-me-isp-for-this-mix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe A — “Just give me Isp for this mix”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-b-what-of-is-best-for-vacuum-isp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe B — “What O/F is best for vacuum Isp?”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-c-compare-rp-1-vs-methane-vs-hydrogen-fairly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe C — “Compare RP-1 vs methane vs hydrogen fairly”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-d-density-impulse-tank-volume-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe D — “Density impulse (tank volume matters)”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-e-im-studying-methane-methalox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe E — “I’m studying methane (methalox)”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-f-blend-two-fuels-example-m20-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe F — “Blend two fuels (example M20-style)”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-g-i-think-in-bar-but-i-need-pascals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe G — “I think in bar, but I need pascals”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recipe-h-dont-make-me-type-pc-and-eps-every-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipe H — “Don’t make me type pc and eps every time”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-6-using-the-command-line-no-python-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 6 — Using the command line (no Python file)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 6 — Using the command line (no Python file)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#one-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-for-other-programs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON (for other programs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan O/F
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-propellants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare propellants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list-propellants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List propellants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clear-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clear cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-7-understanding-the-output-what-to-trust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 7 — Understanding the output (what to trust)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 7 — Understanding the output (what to trust)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shifting-vs-frozen-isp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shifting vs frozen Isp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vacuum-vs-sea-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vacuum vs sea-level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warnings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-details-advanced-but-useful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chamber details (advanced but useful)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-8-looking-up-propellant-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 8 — Looking up propellant data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-9-examples-that-ship-with-the-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 9 — Examples that ship with the project
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-10-common-mistakes-and-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 10 — Common mistakes (and fixes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-11-minimal-mental-model-of-a-good-first-study" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 11 — Minimal mental model of “a good first study”
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modulenotfounderror-no-module-named-propwrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModuleNotFoundError: No module named 'propwrap'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#propwrap-is-not-recognized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        propwrap is not recognized
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-fails-on-rocketcea-cantera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install fails on RocketCEA / Cantera
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results-look-insane-isp-thousands-tc-millions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results look insane (Isp thousands, Tc millions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i-changed-a-custom-propellant-card-but-get-old-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I changed a custom propellant card but get old numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-go-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to go next
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-page-cheat-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-page cheat sheet
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="how-to-use-propwrap-beginner-guide">How to use propwrap (beginner guide)</h1>
+<p>This guide is written for people who may be <strong>new to Python</strong> and new to propellant analysis.<br />
+You do <strong>not</strong> need to be a software engineer. Follow the steps in order the first time.</p>
+<p>If something fails, jump to <a href="#troubleshooting">Troubleshooting</a> at the bottom.</p>
+<hr />
+<h2 id="install-first">Install first</h2>
+<p>Full install for lab PCs: <strong><a href="../INSTALL/">INSTALL.md</a></strong>  </p>
+<p>After install, generate a complete lab folder:</p>
+<pre><code class="language-bash">propwrap homework kerolox --name YourName
+</code></pre>
+<p>Concepts: <strong><a href="learning/">learning/</a></strong> · Cheat sheet: <strong><a href="../cheat_sheet/">cheat_sheet.md</a></strong> · Assignment: <strong><a href="../lab_assignment/">lab_assignment.md</a></strong></p>
+<hr />
+<h2 id="what-is-propwrap-in-plain-english">What is propwrap in plain English?</h2>
+<p>Imagine you want to know:</p>
+<blockquote>
+<p>“If I burn <strong>RP-1</strong> (kerosene) with <strong>LOX</strong> (liquid oxygen) at this mixture ratio and chamber pressure, what vacuum Isp and chamber temperature do I get?”</p>
+</blockquote>
+<p>Normally that means wrestling with NASA’s CEA code, weird units (psi, Rankine, feet/second), and messy scripts.</p>
+<p><strong>propwrap</strong> is a Python package that does that job with simple commands:</p>
+<ol>
+<li>You name a <strong>fuel</strong> and an <strong>oxidizer</strong>.</li>
+<li>You give a few numbers (mixture ratio, pressure, expansion ratio).</li>
+<li>It returns <strong>clear results</strong> with <strong>SI units</strong> (mostly) and optional plots.</li>
+</ol>
+<p>It is for <strong>propellant performance</strong>, not for designing a whole rocket engine (no pumps, no cooling channels, no flight trajectory).</p>
+<blockquote>
+<p><strong>Important honesty:</strong> Numbers are <strong>ideal / theoretical</strong> (perfect 1-D chemistry). Real engines usually get <strong>lower</strong> Isp. Do not treat these as flight guarantees.</p>
+</blockquote>
+<hr />
+<h2 id="what-you-need-on-your-computer">What you need on your computer</h2>
+<ol>
+<li><strong>Python 3.10 or newer</strong><br />
+   Check by opening a terminal (Command Prompt or PowerShell on Windows; Terminal on Mac) and typing:</li>
+</ol>
+<p><code>bash
+   python --version</code></p>
+<p>or:</p>
+<p><code>bash
+   py --version</code></p>
+<p>You want something like <code>Python 3.10</code>, <code>3.11</code>, <code>3.12</code>, etc.</p>
+<ol>
+<li>
+<p><strong>This project folder</strong> (cloned or downloaded from GitHub).</p>
+</li>
+<li>
+<p>About <strong>10–20 minutes</strong> the first time (installing packages can be slow).</p>
+</li>
+</ol>
+<hr />
+<h2 id="part-1-install-do-this-once">Part 1 — Install (do this once)</h2>
+<h3 id="step-1-create-a-virtual-environment">Step 1: Create a “virtual environment”</h3>
+<p>A virtual environment is a <strong>private mini-Python</strong> for this project, so you don’t break other software.</p>
+<p><strong>Windows:</strong></p>
+<pre><code class="language-powershell">py -3.12 -m venv .venv
+.\.venv\Scripts\activate
+</code></pre>
+<p>(If 3.12 isn’t installed, try <code>py -3.11</code> or <code>python -m venv .venv</code>.)</p>
+<p><strong>Mac / Linux:</strong></p>
+<pre><code class="language-bash">python3 -m venv .venv
+source .venv/bin/activate
+</code></pre>
+<p>When it works, you often see <code>(.venv)</code> at the start of your terminal line.</p>
+<h3 id="step-2-install-propwrap">Step 2: Install propwrap</h3>
+<p><strong>Recommended (from PyPI):</strong></p>
+<pre><code class="language-bash">pip install propwrap
+</code></pre>
+<p>This installs propwrap plus <strong>rocketcea</strong>, <strong>cantera</strong>, <strong>matplotlib</strong>, pydantic, and numpy. First install can take several minutes.</p>
+<p><strong>From a git clone (development / course repo):</strong></p>
+<pre><code class="language-bash">cd path/to/propwrap
+pip install -e &quot;.[dev]&quot;
+</code></pre>
+<ul>
+<li><code>-e</code> = editable install (code changes apply immediately)  </li>
+<li><code>.[dev]</code> = also install pytest and packaging tools  </li>
+</ul>
+<h3 id="step-3-check-that-it-works">Step 3: Check that it works</h3>
+<pre><code class="language-bash">propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+python -c &quot;import cantera, matplotlib, propwrap; print(propwrap.__version__)&quot;
+</code></pre>
+<p>You should see a short table of results (Isp, c*, temperatures, etc.).</p>
+<p>If that command is “not found”, try:</p>
+<pre><code class="language-bash">python -m propwrap.cli run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+</code></pre>
+<hr />
+<h2 id="part-2-words-you-will-see-mini-glossary">Part 2 — Words you will see (mini glossary)</h2>
+<p>You only need these ideas to use the tool:</p>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Simple meaning</th>
+<th>Typical value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Fuel</strong></td>
+<td>What burns (e.g. RP-1, CH₄, LH₂, MMH)</td>
+<td>name string</td>
+</tr>
+<tr>
+<td><strong>Oxidizer</strong></td>
+<td>What supplies oxygen (e.g. LOX, N₂O₄)</td>
+<td>name string</td>
+</tr>
+<tr>
+<td><strong>O/F</strong> or <strong>mixture ratio</strong></td>
+<td>Mass of oxidizer ÷ mass of fuel</td>
+<td>RP-1/LOX ~2.3–2.6; LH₂/LOX ~5–6</td>
+</tr>
+<tr>
+<td><strong>Pc</strong></td>
+<td>Chamber pressure</td>
+<td>often 50–100 <strong>bar</strong> in studies</td>
+</tr>
+<tr>
+<td><strong>ε (eps)</strong></td>
+<td>Nozzle area ratio Ae/At</td>
+<td>e.g. 20, 40, 69</td>
+</tr>
+<tr>
+<td><strong>Isp</strong></td>
+<td>Specific impulse — “how much push per propellant”</td>
+<td>seconds (s)</td>
+</tr>
+<tr>
+<td><strong>c*</strong></td>
+<td>Characteristic velocity — chamber energy metric</td>
+<td>m/s</td>
+</tr>
+<tr>
+<td><strong>Tc</strong></td>
+<td>Chamber temperature</td>
+<td>kelvin (K)</td>
+</tr>
+<tr>
+<td><strong>γ (gamma)</strong></td>
+<td>Ratio of specific heats of the gas</td>
+<td>~1.1–1.3</td>
+</tr>
+<tr>
+<td><strong>Density impulse</strong></td>
+<td>Isp × propellant bulk density — good for tank size trades</td>
+<td>s·kg/m³</td>
+</tr>
+</tbody>
+</table>
+<h3 id="units-in-propwrap-important">Units in propwrap (important)</h3>
+<p>Results are stored in <strong>SI</strong>:</p>
+<ul>
+<li>Pressure: <strong>pascals (Pa)</strong> — 1 bar = 100 000 Pa, so 70 bar = 7 000 000 Pa  </li>
+<li>Temperature: <strong>kelvin (K)</strong>  </li>
+<li>Speed / c*: <strong>metres per second (m/s)</strong>  </li>
+<li>Density: <strong>kg/m³</strong>  </li>
+<li>Isp: still <strong>seconds (s)</strong> (everyone in rocketry uses this)  </li>
+<li>Also available: <strong>ve</strong> = exhaust velocity in m/s (= Isp × 9.80665)</li>
+</ul>
+<p>You can <strong>type</strong> pressure in bar if that’s easier:</p>
+<pre><code class="language-python">pc_bar=70        # easy for humans
+# or
+pc=7_000_000     # pure SI pascals
+# or
+pc_mpa=7         # megapascals
+</code></pre>
+<hr />
+<h2 id="part-3-your-first-python-script-copy-paste">Part 3 — Your first Python script (copy-paste)</h2>
+<h3 id="create-a-file">Create a file</h3>
+<p>In the project folder, create a file named <code>my_first_run.py</code> (any name is fine).</p>
+<p>Paste this:</p>
+<pre><code class="language-python"># my_first_run.py
+# This is a comment. Python ignores lines starting with #
+
+from propwrap import Mixture
+
+# 1) Define the propellant pair: fuel first, oxidizer second
+mixture = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;)
+
+# 2) Run one calculation
+#    of  = mixture ratio O/F (dimensionless)
+#    pc_bar = chamber pressure in bar (converted to Pa inside)
+#    eps = nozzle expansion ratio Ae/At
+result = mixture.evaluate(of=2.56, pc_bar=70, eps=20)
+
+# 3) Print a human-readable summary
+print(result)
+</code></pre>
+<h3 id="run-it">Run it</h3>
+<p>With the virtual environment still activated:</p>
+<pre><code class="language-bash">python my_first_run.py
+</code></pre>
+<h3 id="what-you-should-see">What you should see</h3>
+<p>Something like:</p>
+<pre><code class="language-text">RP1/LOX  O/F=2.56  Pc=7.000e+06 Pa (70 bar)  ε=20
+Isp_vac  343.7 s (shifting)   ve  3371 m/s   ...
+c*       1798 m/s      Tc  3672 K
+...
+</code></pre>
+<h3 id="read-individual-numbers">Read individual numbers</h3>
+<pre><code class="language-python">print(&quot;Vacuum Isp (s):&quot;, result.isp_vac_shifting)
+print(&quot;Exhaust velocity (m/s):&quot;, result.ve_vac_shifting)
+print(&quot;Chamber T (K):&quot;, result.tc_kelvin)
+print(&quot;c* (m/s):&quot;, result.c_star)
+print(&quot;Pressure (Pa):&quot;, result.pc_pa)
+print(&quot;Pressure (bar):&quot;, result.pc_bar)   # convenience view
+</code></pre>
+<hr />
+<h2 id="part-4-the-main-object-mixture">Part 4 — The main object: <code>Mixture</code></h2>
+<p>Think of <code>Mixture</code> as <strong>one fuel + one oxidizer</strong> you will study.</p>
+<pre><code class="language-python">from propwrap import Mixture
+
+m = Mixture(&quot;CH4&quot;, &quot;LOX&quot;)   # methane + liquid oxygen
+# Same thing under old names:
+# from propwrap import Propellant
+# m = Propellant(&quot;CH4&quot;, &quot;LOX&quot;)
+</code></pre>
+<h3 id="common-methods-what-to-call">Common methods (what to call)</h3>
+<table>
+<thead>
+<tr>
+<th>What you want</th>
+<th>What to type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One operating point</td>
+<td><code>m.evaluate(of=..., pc_bar=..., eps=...)</code></td>
+</tr>
+<tr>
+<td>Scan many O/F values</td>
+<td><code>m.scan_of((start, stop, step), pc_bar=..., eps=...)</code></td>
+</tr>
+<tr>
+<td>Density-impulse curve</td>
+<td><code>m.density_impulse((start, stop, step), pc_bar=..., eps=...)</code></td>
+</tr>
+<tr>
+<td>γ vs expansion ratio</td>
+<td><code>m.product_gamma_profile(of=..., pc_bar=..., eps_range=(...))</code></td>
+</tr>
+<tr>
+<td>Full mini-study</td>
+<td><code>m.study(of=..., pc_bar=..., eps=...)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="plots-are-off-by-default">Plots are <strong>off</strong> by default</h3>
+<p>propwrap will <strong>not</strong> open random plot windows.</p>
+<p>To save a plot:</p>
+<pre><code class="language-python">sweep = m.scan_of((2.0, 3.2, 0.1), pc_bar=70, eps=20)
+sweep.plot(save=&quot;my_of_scan.png&quot;)   # creates a PNG file
+</code></pre>
+<p>Or:</p>
+<pre><code class="language-python">m.scan_of((2.0, 3.2, 0.1), pc_bar=70, eps=20, plot=True, save=&quot;my_of_scan.png&quot;)
+</code></pre>
+<hr />
+<h2 id="part-5-everyday-recipes">Part 5 — Everyday recipes</h2>
+<h3 id="recipe-a-just-give-me-isp-for-this-mix">Recipe A — “Just give me Isp for this mix”</h3>
+<pre><code class="language-python">from propwrap import Mixture
+
+m = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;)
+r = m.evaluate(of=2.4, pc_bar=100, eps=35)
+print(r.summary())
+print(&quot;Isp vac =&quot;, r.isp_vac_shifting, &quot;s&quot;)
+</code></pre>
+<h3 id="recipe-b-what-of-is-best-for-vacuum-isp">Recipe B — “What O/F is best for vacuum Isp?”</h3>
+<pre><code class="language-python">from propwrap import Mixture
+
+m = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;)
+
+# Scan O/F from 2.0 to 3.2 in steps of 0.1
+sweep = m.scan_of((2.0, 3.2, 0.1), pc_bar=70, eps=20)
+print(sweep.summary())
+
+best = sweep.optimum()   # highest isp_vac_shifting by default
+print(&quot;Best O/F =&quot;, best.of_ratio)
+print(&quot;Best Isp =&quot;, best.isp_vac_shifting, &quot;s&quot;)
+</code></pre>
+<p>The triple <code>(2.0, 3.2, 0.1)</code> means:</p>
+<ul>
+<li>start at 2.0  </li>
+<li>stop at 3.2  </li>
+<li>step by 0.1  </li>
+</ul>
+<h3 id="recipe-c-compare-rp-1-vs-methane-vs-hydrogen-fairly">Recipe C — “Compare RP-1 vs methane vs hydrogen fairly”</h3>
+<p><strong>Wrong way:</strong> use the same O/F for all three (e.g. 2.5).<br />
+Hydrogen’s good O/F is ~5–6, not 2.5.</p>
+<p><strong>Right way:</strong> let each pair find <strong>its own</strong> best O/F:</p>
+<pre><code class="language-python">from propwrap import compare_propellants
+
+trade = compare_propellants(
+    [&quot;RP-1/LOX&quot;, &quot;CH4/LOX&quot;, &quot;LH2/LOX&quot;, &quot;MMH/N2O4&quot;],
+    pc_bar=70,
+    eps=40,
+)
+print(trade)
+</code></pre>
+<p>You get:</p>
+<ul>
+<li>a table of each pair at its optimum O/F  </li>
+<li>ranking by <strong>Isp</strong>  </li>
+<li>ranking by <strong>density-Isp</strong> (tank-friendly metric; RP-1 often beats LH₂ here)</li>
+</ul>
+<h3 id="recipe-d-density-impulse-tank-volume-matters">Recipe D — “Density impulse (tank volume matters)”</h3>
+<pre><code class="language-python">from propwrap import Mixture
+
+m = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;)
+curve = m.density_impulse((1.8, 3.4, 0.1), pc_bar=70, eps=40)
+print(curve.summary())
+print(&quot;O/F for max Isp:&quot;, curve.optimum_isp_of)
+print(&quot;O/F for max ρ·Isp:&quot;, curve.optimum_density_isp_of)
+</code></pre>
+<h3 id="recipe-e-im-studying-methane-methalox">Recipe E — “I’m studying methane (methalox)”</h3>
+<pre><code class="language-python">from propwrap import Mixture, characterize
+
+# Quick point
+m = Mixture(&quot;CH4&quot;, &quot;LOX&quot;)  # cryogenic defaults applied for LOX/CH4 when enabled
+print(m.evaluate(of=3.0, pc_bar=100, eps=25))
+
+# Or one-shot workflow: point + O/F scan + density-Isp
+report = characterize(&quot;CH4&quot;, &quot;LOX&quot;, of=3.0, pc_bar=100, eps=25, plot=False)
+print(report)
+</code></pre>
+<h3 id="recipe-f-blend-two-fuels-example-m20-style">Recipe F — “Blend two fuels (example M20-style)”</h3>
+<pre><code class="language-python">from propwrap import define_blend, Mixture
+
+# 20% MMH + 80% UDMH by weight
+define_blend(
+    &quot;MyM20&quot;,
+    [(&quot;MMH&quot;, 20), (&quot;UDMH&quot;, 80)],
+    kind=&quot;fuel&quot;,
+    evaluate_with=&quot;N2O4&quot;,   # optional: run a quick point with this oxidizer
+    of=2.0,
+    pc_bar=50,
+    eps=20,
+)
+
+m = Mixture(&quot;MyM20&quot;, &quot;N2O4&quot;)
+print(m.evaluate(of=2.0, pc_bar=50, eps=20))
+</code></pre>
+<p>Weight percents should add up to about <strong>100</strong>.</p>
+<h3 id="recipe-g-i-think-in-bar-but-i-need-pascals">Recipe G — “I think in bar, but I need pascals”</h3>
+<pre><code class="language-python">from propwrap import convert, units
+
+print(convert(70, &quot;bar&quot;, &quot;Pa&quot;))      # 7000000.0
+print(convert(7, &quot;MPa&quot;, &quot;bar&quot;))      # 70.0
+print(convert(300, &quot;s&quot;, &quot;m/s&quot;))      # Isp → ve
+print(units.g_cm3_to_kg_m3(0.81))    # 810.0
+</code></pre>
+<h3 id="recipe-h-dont-make-me-type-pc-and-eps-every-time">Recipe H — “Don’t make me type pc and eps every time”</h3>
+<pre><code class="language-python">from propwrap import Mixture, set_defaults
+
+set_defaults(pc_bar=70, eps=40)
+
+m = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;)
+# uses the defaults for pressure and eps
+r = m.evaluate(of=2.56)
+print(r.pc_pa, r.eps)
+</code></pre>
+<p>Or use a <code>Case</code> object:</p>
+<pre><code class="language-python">from propwrap import Case
+
+case = Case(pc_bar=70, eps=40)
+print(case.evaluate(&quot;RP-1&quot;, &quot;LOX&quot;, of=2.56))
+print(case.compare([&quot;RP-1/LOX&quot;, &quot;CH4/LOX&quot;, &quot;LH2/LOX&quot;]))
+</code></pre>
+<hr />
+<h2 id="part-6-using-the-command-line-no-python-file">Part 6 — Using the command line (no Python file)</h2>
+<p>After install, these work in the terminal.</p>
+<h3 id="one-point">One point</h3>
+<pre><code class="language-bash">propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+</code></pre>
+<p>Same with SI pressure:</p>
+<pre><code class="language-bash">propwrap run RP-1 LOX --of 2.56 --pc 7000000 --eps 20
+propwrap run RP-1 LOX --of 2.56 --pc-mpa 7 --eps 20
+</code></pre>
+<h3 id="json-for-other-programs">JSON (for other programs)</h3>
+<pre><code class="language-bash">propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20 --json
+</code></pre>
+<h3 id="scan-of">Scan O/F</h3>
+<pre><code class="language-bash">propwrap scan-of RP-1 LOX --pc-bar 70 --eps 20 --range 2.0 3.2 0.1
+</code></pre>
+<h3 id="compare-propellants">Compare propellants</h3>
+<pre><code class="language-bash">propwrap compare-pairs --combos &quot;RP-1/LOX,CH4/LOX,LH2/LOX&quot; --pc-bar 70 --eps 40
+</code></pre>
+<h3 id="list-propellants">List propellants</h3>
+<pre><code class="language-bash">propwrap list
+propwrap list --cryogenic
+propwrap list --storable
+</code></pre>
+<h3 id="clear-cache">Clear cache</h3>
+<p>Results are cached for speed. To wipe:</p>
+<pre><code class="language-bash">propwrap clear-cache
+</code></pre>
+<hr />
+<h2 id="part-7-understanding-the-output-what-to-trust">Part 7 — Understanding the output (what to trust)</h2>
+<h3 id="shifting-vs-frozen-isp">Shifting vs frozen Isp</h3>
+<ul>
+<li><strong>Shifting</strong> (<code>isp_vac_shifting</code>): chemistry keeps adjusting in the nozzle (usually <strong>higher</strong>).  </li>
+<li><strong>Frozen</strong> (<code>isp_vac_frozen</code>): chemistry freezes earlier (usually <strong>lower</strong>).<br />
+Real engines sit <strong>in between</strong>.</li>
+</ul>
+<h3 id="vacuum-vs-sea-level">Vacuum vs sea-level</h3>
+<ul>
+<li><strong>Vacuum Isp</strong> assumes no atmosphere.  </li>
+<li><strong>Sea-level Isp</strong> assumes ambient pressure ≈ 1 atm.<br />
+A big nozzle (large ε) can look great in vacuum and worse at sea level.</li>
+</ul>
+<h3 id="warnings">Warnings</h3>
+<p>If <code>result.warnings</code> is not empty, <strong>read them</strong>. Examples:</p>
+<ul>
+<li>extreme O/F far from stoich  </li>
+<li>odd temperature ordering  </li>
+<li>huge expansion at sea level  </li>
+</ul>
+<pre><code class="language-python">for w in result.warnings:
+    print(&quot;Warning:&quot;, w)
+</code></pre>
+<h3 id="chamber-details-advanced-but-useful">Chamber details (advanced but useful)</h3>
+<pre><code class="language-python">r = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;).evaluate(of=2.56, pc_bar=70, eps=20)
+if r.chamber:
+    print(&quot;cp J/(kg·K):&quot;, r.chamber.cp_j_kg_k)
+    print(&quot;mu Pa·s:&quot;, r.chamber.mu_pa_s)
+    print(&quot;gamma:&quot;, r.chamber.gamma)
+</code></pre>
+<hr />
+<h2 id="part-8-looking-up-propellant-data">Part 8 — Looking up propellant data</h2>
+<pre><code class="language-python">from propwrap import get_propellant, list_registry
+
+rp1 = get_propellant(&quot;RP-1&quot;)
+print(rp1.name)                 # RP1
+print(rp1.density_kg_m3)        # kg/m³
+print(rp1.storage)              # e.g. storable / cryogenic
+
+for p in list_registry(kind=&quot;fuel&quot;, storage=&quot;cryogenic&quot;):
+    print(p.name, p.density_kg_m3)
+</code></pre>
+<p>Aliases work: <code>"RP-1"</code>, <code>"RP1"</code>, <code>"LOX"</code>, <code>"O2"</code>, <code>"CH4"</code>, <code>"LCH4"</code>, etc.</p>
+<hr />
+<h2 id="part-9-examples-that-ship-with-the-project">Part 9 — Examples that ship with the project</h2>
+<p>From the project root (venv activated):</p>
+<pre><code class="language-bash">python examples/basic_performance.py
+python examples/propellant_trade.py
+python examples/lox_ch4_case.py
+python examples/of_sweep_lox_rp1.py
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>What it teaches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../examples/basic_performance.py">examples/basic_performance.py</a></td>
+<td>Single point</td>
+</tr>
+<tr>
+<td><a href="../examples/of_sweep_lox_rp1.py">examples/of_sweep_lox_rp1.py</a></td>
+<td>O/F sweep + plot file</td>
+</tr>
+<tr>
+<td><a href="../examples/propellant_trade.py">examples/propellant_trade.py</a></td>
+<td>Multi-pair trade</td>
+</tr>
+<tr>
+<td><a href="../examples/lox_ch4_case.py">examples/lox_ch4_case.py</a></td>
+<td>Methane case</td>
+</tr>
+<tr>
+<td><a href="../examples/custom_propellants.py">examples/custom_propellants.py</a></td>
+<td>Custom cards</td>
+</tr>
+<tr>
+<td><a href="../examples/gamma_profile_for_nozzle.py">examples/gamma_profile_for_nozzle.py</a></td>
+<td>γ vs area ratio data shape</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-10-common-mistakes-and-fixes">Part 10 — Common mistakes (and fixes)</h2>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>What happens</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Same O/F for LH₂ and RP-1 in a “fair” compare</td>
+<td>Nonsense ranking</td>
+<td>Use <code>compare_propellants</code></td>
+</tr>
+<tr>
+<td><code>eps=0.5</code></td>
+<td>Error</td>
+<td>ε must be <strong>&gt; 1</strong> (Ae/At), not a fraction of something else</td>
+</tr>
+<tr>
+<td><code>pc=70</code> thinking SI</td>
+<td>70 <strong>Pa</strong> is almost vacuum — wrong</td>
+<td>Use <code>pc_bar=70</code> or <code>pc=7_000_000</code></td>
+</tr>
+<tr>
+<td>Forgetting to activate <code>.venv</code></td>
+<td><code>propwrap</code> / import not found</td>
+<td>Activate venv, reinstall if needed</td>
+</tr>
+<tr>
+<td>Treating CEA Isp as Merlin flight Isp</td>
+<td>Over-optimistic design</td>
+<td>Apply your own efficiencies; read limitations</td>
+</tr>
+<tr>
+<td>Expecting plots automatically</td>
+<td>Nothing appears</td>
+<td>Call <code>.plot(save="...")</code> or <code>plot=True</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-11-minimal-mental-model-of-a-good-first-study">Part 11 — Minimal mental model of “a good first study”</h2>
+<p>For a new propellant pair, do this every time:</p>
+<ol>
+<li><strong>One point</strong> at a reasonable O/F, Pc, ε → <code>evaluate</code>  </li>
+<li><strong>O/F scan</strong> → <code>scan_of</code> → find peak Isp  </li>
+<li><strong>Density-Isp</strong> → <code>density_impulse</code> if tanks matter  </li>
+<li><strong>Compare</strong> to alternatives → <code>compare_propellants</code>  </li>
+<li>Write down: O/F*, Isp, Tc, ρ·Isp, and that values are <strong>theoretical</strong></li>
+</ol>
+<p>That’s a complete beginner workflow.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="modulenotfounderror-no-module-named-propwrap"><code>ModuleNotFoundError: No module named 'propwrap'</code></h3>
+<ul>
+<li>Activate the virtual environment.  </li>
+<li>Run <code>pip install -e ".[dev]"</code> again from the project root.</li>
+</ul>
+<h3 id="propwrap-is-not-recognized"><code>propwrap</code> is not recognized</h3>
+<pre><code class="language-bash">python -m propwrap.cli run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+</code></pre>
+<h3 id="install-fails-on-rocketcea-cantera">Install fails on RocketCEA / Cantera</h3>
+<ul>
+<li>Use Python 3.10–3.12 if possible.  </li>
+<li>On Windows, prefer official Python from python.org, then:</li>
+</ul>
+<p><code>bash
+  pip install --upgrade pip
+  pip install -e ".[dev]"</code></p>
+<h3 id="results-look-insane-isp-thousands-tc-millions">Results look insane (Isp thousands, Tc millions)</h3>
+<p>That usually means a <strong>unit mix-up</strong> (e.g. treating Rankine as kelvin).<br />
+propwrap should prevent that; if you see it, open an issue with your exact code.</p>
+<h3 id="i-changed-a-custom-propellant-card-but-get-old-numbers">I changed a custom propellant card but get old numbers</h3>
+<pre><code class="language-bash">propwrap clear-cache
+</code></pre>
+<hr />
+<h2 id="where-to-go-next">Where to go next</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>When to open it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../README.md">../README.md</a></td>
+<td>Project overview, features, install summary</td>
+</tr>
+<tr>
+<td><a href="../api_reference/">api_reference.md</a></td>
+<td>Full list of functions and fields</td>
+</tr>
+<tr>
+<td><a href="../validation/">validation.md</a></td>
+<td>How numbers are checked / what is trusted</td>
+</tr>
+<tr>
+<td><a href="../tests/data/validation_catalog.json">../tests/data/validation_catalog.json</a></td>
+<td>Golden values used in tests</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="one-page-cheat-sheet">One-page cheat sheet</h2>
+<pre><code class="language-python">from propwrap import Mixture, compare_propellants, convert, set_defaults
+
+# Setup (optional)
+set_defaults(pc_bar=70, eps=40)
+
+# Single pair
+m = Mixture(&quot;RP-1&quot;, &quot;LOX&quot;)
+r = m.evaluate(of=2.56, pc_bar=70, eps=20)
+print(r)
+print(r.isp_vac_shifting, r.ve_vac_shifting, r.tc_kelvin)
+
+# O/F scan
+sw = m.scan_of((2.0, 3.2, 0.1), pc_bar=70, eps=20)
+print(sw.optimum().of_ratio)
+
+# Fair multi-pair trade
+print(compare_propellants([&quot;RP-1/LOX&quot;, &quot;CH4/LOX&quot;, &quot;LH2/LOX&quot;], pc_bar=70, eps=40))
+
+# Unit conversion
+print(convert(70, &quot;bar&quot;, &quot;Pa&quot;))
+</code></pre>
+<pre><code class="language-bash">propwrap run RP-1 LOX --of 2.56 --pc-bar 70 --eps 20
+propwrap compare-pairs --combos &quot;RP-1/LOX,CH4/LOX,LH2/LOX&quot; --pc-bar 70 --eps 40
+</code></pre>
+<p>You’ve got this. Start with <strong>Part 3</strong>, run one script, then try <strong>Recipe C</strong> when you want a real propellant trade.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
