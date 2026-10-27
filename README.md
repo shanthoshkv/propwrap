@@ -14,7 +14,7 @@
 Project site: **[aboutkvs.vercel.app/propwrap.html](https://aboutkvs.vercel.app/propwrap.html)** (mirrored in this repo at [`website/`](https://github.com/shanthoshkv/propwrap/tree/main/website), preview with `python -m http.server 8080 --directory website`).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/isp_map.png" alt="Vacuum Isp over O/F and chamber pressure for RP-1/LOX, made with propwrap" width="860">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/isp_map.png" alt="Vacuum Isp over O/F and chamber pressure for RP-1/LOX, made with propwrap" width="860">
   <br><sub>One call: <code>Mixture("RP-1","LOX").isp_map((1.8, 3.6, 0.1), (20, 200, 10), eps=20)</code>. Dashed line is the best O/F at each pressure.</sub>
 </p>
 
@@ -86,7 +86,7 @@ Everything below came out of the library itself (RP-1/LOX, Pc = 70 bar, LOX at 9
 
 The first thing most people want: where is the best mixture ratio, and how much does it cost to miss it? The shaded band is the gain from shifting equilibrium over frozen composition, the dotted line is stoichiometric.
 
-<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/of_sweep.png" alt="O/F sweep: shifting and frozen Isp, sea-level Isp and chamber temperature" width="860"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/of_sweep.png" alt="O/F sweep: shifting and frozen Isp, sea-level Isp and chamber temperature" width="860"></p>
 
 ```python
 m = Mixture("RP-1", "LOX", fuel_temp_k=298.15, ox_temp_k=90.17)
@@ -98,8 +98,8 @@ m.scan_of((1.8, 3.6, 0.1), pc_bar=70, eps=20).plot(save="of_sweep.png")
 Left: how Isp and thrust coefficient grow with expansion ratio, with the point where exit pressure equals ambient and the Summerfield separation limit marked. Right: the same fixed nozzle flown through the US Standard 1976 atmosphere.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/eps_sweep.png" alt="Area-ratio sweep" width="425">
-  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/altitude.png" alt="Isp vs altitude" width="425">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/eps_sweep.png" alt="Area-ratio sweep" width="425">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/altitude.png" alt="Isp vs altitude" width="425">
 </p>
 
 ### Pressure and composition
@@ -107,21 +107,21 @@ Left: how Isp and thrust coefficient grow with expansion ratio, with the point w
 Chamber pressure pays off quickly then flattens out. The species plot shows what the flame is actually made of as you go richer: CO2 gives way to CO and H2.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/pc_sweep.png" alt="Chamber pressure sweep" width="425">
-  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/species.png" alt="Chamber species mole fractions vs O/F" width="425">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/pc_sweep.png" alt="Chamber pressure sweep" width="425">
+  <img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/species.png" alt="Chamber species mole fractions vs O/F" width="425">
 </p>
 
 ### Fair propellant trades
 
 Comparing propellants at one shared O/F is a classic mistake. `compare_propellants` runs each pair at its own optimum and reports Isp, density impulse, flame temperature and c* side by side. Note how LH2/LOX wins on Isp and loses badly on density impulse.
 
-<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/compare.png" alt="Propellant comparison bars" width="860"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/compare.png" alt="Propellant comparison bars" width="860"></p>
 
 ### Station properties
 
 One evaluation also gives you the gas state at chamber, throat and exit, which is what you need to start thinking about nozzle contours or heat loads.
 
-<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/website/img/stations.png" alt="Temperature, pressure, gamma and molar mass at each station" width="860"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/shanthoshkv/propwrap/main/docs/img/stations.png" alt="Temperature, pressure, gamma and molar mass at each station" width="860"></p>
 
 ---
 
