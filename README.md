@@ -2,6 +2,14 @@
 
 **Typed propellant thermochemistry for liquid rockets** — a clean Python API over [NASA CEA](https://www1.grc.nasa.gov/research-and-engineering/ceaweb/) (via [RocketCEA](https://rocketcea.readthedocs.io/)) with optional [Cantera](https://cantera.org/) cross-checks.
 
+![demo](docs/demo.gif)
+
+```bash
+pip install propwrap
+```
+
+**Live demo:** [aboutkvs.vercel.app/propwrap.html](https://aboutkvs.vercel.app/propwrap.html)
+
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/shanthoshkv/propwrap/blob/main/LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanthoshkv/propwrap/blob/main/examples/quickstart.ipynb)

@@ -43,11 +43,15 @@ def test_cli_new_commands(tmp_path: Path, capsys: pytest.CaptureFixture[str]) ->
 
 
 def test_plot_golden_image(tmp_path: Path) -> None:
+    import matplotlib
     from matplotlib.testing.compare import compare_images
 
     from propwrap.plotting import plot_altitude
 
     rows = [{"altitude_m": h * 1e3, "isp_s": 290 + h, "pamb_pa": 101325 * 0.88**h} for h in range(0, 40, 5)]
+    # altitude.png was rendered with matplotlib 3.11; 3.10 (the newest on Python 3.10) lays the figure out at a different size
+    if tuple(int(x) for x in matplotlib.__version__.split(".")[:2]) < (3, 11):
+        pytest.skip("golden image needs matplotlib >= 3.11")
     out = tmp_path / "alt.png"
     plot_altitude(rows, save_path=str(out))  # type: ignore[arg-type]
     ref = BASELINE / "altitude.png"
